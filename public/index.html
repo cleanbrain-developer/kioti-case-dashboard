@@ -133,7 +133,19 @@ body{
   outline:none;transition:border-color .2s,box-shadow .2s}
 .ff input:focus,.ff select:focus{border-color:var(--blue2);box-shadow:var(--ring)}
 [data-theme="dark"] .ff input,[data-theme="dark"] .ff select{background:var(--card2)}
-.filter-actions{margin-top:14px;display:flex;gap:8px}
+.filter-actions{margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.active-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:4px}
+.active-filter-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px 3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+  background:rgba(239,68,68,.1);color:#dc2626;
+  border:1px solid rgba(239,68,68,.28);white-space:nowrap}
+.active-filter-chip button{
+  background:none;border:none;cursor:pointer;padding:0;margin-left:2px;
+  color:inherit;opacity:.7;font-size:13px;line-height:1;display:flex;align-items:center}
+.active-filter-chip button:hover{opacity:1}
+[data-theme="dark"] .active-filter-chip{
+  background:rgba(248,113,113,.12);color:#f87171;border-color:rgba(248,113,113,.3)}
 
 /* ── Buttons ── */
 .btn{
@@ -638,6 +650,13 @@ span.flatpickr-weekday{
         <div class="filter-actions">
           <button class="btn btn-primary" id="btn-apply">Apply Filters</button>
           <button class="btn btn-secondary" id="btn-clear">Clear All</button>
+          <div class="active-filters" id="active-filters" style="display:none">
+            <span style="font-size:11px;color:var(--muted);font-weight:500">Active:</span>
+            <span class="active-filter-chip" id="chip-open-only" style="display:none">
+              Open Only
+              <button onclick="clearOpenOnly()" title="Remove filter">✕</button>
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -994,6 +1013,20 @@ async function fetchDrillLive(deptName){
   }catch(e){toast('Drill error: '+e.message,'error');}
 }
 
+/* ── Open Only indicator ── */
+function syncOpenOnlyBadge() {
+  const chip = document.getElementById('chip-open-only');
+  const wrap = document.getElementById('active-filters');
+  if (!chip || !wrap) return;
+  chip.style.display = S.openOnly ? '' : 'none';
+  wrap.style.display = S.openOnly ? '' : 'none';
+}
+window.clearOpenOnly = function() {
+  S.openOnly = false;
+  syncOpenOnlyBadge();
+  fetchCases(true);
+};
+
 /* ── Dispatch ── */
 function fetchCases(r=true){ S.demoMode?fetchCasesDemo(r):fetchCasesLive(r); }
 function fetchMore(){ S.demoMode?fetchMoreDemo():fetchMoreLive(); }
@@ -1019,6 +1052,7 @@ function renderDeptChart(deptData,selectedDept,filterDept){
 function goToCasesWithPic(picName) {
   // Open 필터 활성화 (IsClosed = false, 드롭다운 변경 없음)
   S.openOnly = true;
+  syncOpenOnlyBadge();
   // 필터 패널 열기
   const fb = document.getElementById('filter-body');
   const fh = document.getElementById('filter-hdr');
@@ -1297,6 +1331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ['f-search','f-status','f-priority','f-dept','f-pic','f-date-from','f-date-to']
       .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     S.openOnly=false;
+    syncOpenOnlyBadge();
     fetchCases(true);
   });
   document.getElementById('f-search').addEventListener('keydown',e=>{if(e.key==='Enter')fetchCases(true);});
