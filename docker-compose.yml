@@ -1,0 +1,49 @@
+services:
+
+  # ── Node.js 앱 ─────────────────────────────────────────────
+  app:
+    build: .
+    image: kioti-case-dashboard:latest
+    container_name: kioti-app
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file: .env                       # SF 인증정보 주입
+    environment:
+      DATABASE_URL: postgresql://kioti:${DB_PASSWORD:-kioti1234}@db:5432/kioti_dashboard
+      SYNC_INTERVAL_MIN: "${SYNC_INTERVAL_MIN:-15}"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kioti-net
+
+  # ── PostgreSQL 16 ───────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: kioti-db
+    environment:
+      POSTGRES_USER: kioti
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kioti1234}
+      POSTGRES_DB: kioti_dashboard
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kioti -d kioti_dashboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - kioti-net
+
+volumes:
+  postgres_data:
+    name: kioti_postgres_data
+
+networks:
+  kioti-net:
+    name: kioti-network

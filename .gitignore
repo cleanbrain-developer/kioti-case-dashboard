@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment — credentials must never be committed
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Docker volumes (local dev)
+postgres_data/
