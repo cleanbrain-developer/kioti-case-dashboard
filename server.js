@@ -371,7 +371,7 @@ app.get('/api/cases', async (req, res) => {
   if (!isConfigured()) return res.status(503).json({ error: 'Salesforce not configured' });
 
   const {
-    search, status, priority, department, personInCharge, moduleLevel, dateFrom, dateTo,
+    search, status, isClosed, priority, department, personInCharge, moduleLevel, dateFrom, dateTo,
     page = 1, pageSize = 25, sortField = 'CreatedDate', sortDir = 'DESC',
   } = req.query;
 
@@ -382,7 +382,7 @@ app.get('/api/cases', async (req, res) => {
   /* ─ DB route ─ */
   if (await db.isAvailable() && await db.getCaseCount() > 0) {
     try {
-      const { where, params } = buildDBWhere({ search, status, priority, department, personInCharge, moduleLevel, dateFrom, dateTo });
+      const { where, params } = buildDBWhere({ search, status, isClosed, priority, department, personInCharge, moduleLevel, dateFrom, dateTo });
       const dbCol = DB_SORT_MAP[sortField] || 'created_date';
       const [countRes, rowsRes] = await Promise.all([
         db.query(`SELECT COUNT(*) FROM cases ${where}`, params),
@@ -402,7 +402,7 @@ app.get('/api/cases', async (req, res) => {
   try {
     const safeSort = resolveSortField(sortField);
     const safeOffset = Math.min(offset, 2000);
-    const where = buildWhere({ search, status, priority, department, personInCharge, moduleLevel, dateFrom, dateTo });
+    const where = buildWhere({ search, status, isClosed, priority, department, personInCharge, moduleLevel, dateFrom, dateTo });
     const picRel = FIELDS.personInCharge.replace(/__c$/i, '__r');
     const selectFields = ['Id','CaseNumber','Subject','Status','Priority',
       FIELDS.department, FIELDS.personInCharge, `${picRel}.Name`, FIELDS.moduleLevel,
