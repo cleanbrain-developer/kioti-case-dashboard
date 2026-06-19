@@ -627,7 +627,7 @@ span.flatpickr-weekday{
         <div class="filter-grid">
           <div class="ff"><label>Search (Subject / Case #)</label><input type="text" id="f-search" placeholder="Type keyword…" /></div>
           <div class="ff"><label>Status</label>
-            <select id="f-status"><option value="">All Statuses</option><option value="__open__">Open (Not Closed)</option><option>New</option><option>Working</option><option>Escalated</option><option>Closed</option></select></div>
+            <select id="f-status"><option value="">All Statuses</option><option>New</option><option>Working</option><option>Escalated</option><option>Closed</option></select></div>
           <div class="ff"><label>Priority</label>
             <select id="f-priority"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select></div>
           <div class="ff"><label>Department</label><input type="text" id="f-dept" placeholder="Department…" /></div>
@@ -780,7 +780,7 @@ function localToISO(dateStr, end) {
 const S = {
   demoMode:false, instanceUrl:'', totalCount:0, page:1, pageSize:25,
   viewMode:'paging', sortField:'CreatedDate', sortDir:'DESC',
-  loading:false, allLoaded:false, casesLoaded:false,
+  loading:false, allLoaded:false, casesLoaded:false, openOnly:false,
   fields:{ department:'Department__c', personInCharge:'PersonInCharge__c', moduleLevel:'ModuleLevel__c' },
 };
 let INS_DEPT_SELECTED = null, INS_OPEN_BY_DEPT = [], INS_OPEN_BY_PIC = [];
@@ -807,9 +807,8 @@ function filterParams(){
   const g=id=>document.getElementById(id)?.value?.trim()||'';
   const p={page:S.page,pageSize:S.pageSize,sortField:S.sortField,sortDir:S.sortDir};
   const search=g('f-search'); if(search) p.search=search;
-  const status=g('f-status');
-  if(status==='__open__') p.isClosed='false';
-  else if(status) p.status=status;
+  const status=g('f-status'); if(status) p.status=status;
+  if(S.openOnly) p.isClosed='false';
   const prio=g('f-priority'); if(prio) p.priority=prio;
   const dept=g('f-dept');     if(dept) p.department=dept;
   const pic=g('f-pic');       if(pic) p.personInCharge=pic;
@@ -868,8 +867,8 @@ function mockFilter(){
     to=localToISO(document.getElementById('f-date-to')?.value||'',true);
   let r=MOCK.filter(c=>{
     if(search&&!(c.Subject.toLowerCase().includes(search)||c.CaseNumber.includes(search))) return false;
-    if(status==='__open__'&&c.Status==='Closed') return false;
-    if(status&&status!=='__open__'&&c.Status!==status) return false;
+    if(status&&c.Status!==status) return false;
+    if(S.openOnly&&c.Status==='Closed') return false;
     if(prio&&c.Priority!==prio) return false;
     if(dept&&!(c.Department__c||'').toLowerCase().includes(dept)) return false;
     if(pic&&!((c._picName||'').toLowerCase().includes(pic))) return false;
@@ -1018,6 +1017,8 @@ function renderDeptChart(deptData,selectedDept,filterDept){
   });
 }
 function goToCasesWithPic(picName) {
+  // Open 필터 활성화 (IsClosed = false, 드롭다운 변경 없음)
+  S.openOnly = true;
   // 필터 패널 열기
   const fb = document.getElementById('filter-body');
   const fh = document.getElementById('filter-hdr');
@@ -1025,9 +1026,7 @@ function goToCasesWithPic(picName) {
     fb.classList.add('open');
     fh && fh.classList.add('open');
   }
-  // Status = Open (Not Closed), PIC 필터 설정
-  const statusEl = document.getElementById('f-status');
-  if (statusEl) statusEl.value = '__open__';
+  // PIC 필터 설정
   const picEl = document.getElementById('f-pic');
   if (picEl) picEl.value = picName;
   // Cases 탭으로 전환
@@ -1037,7 +1036,6 @@ function goToCasesWithPic(picName) {
   document.querySelectorAll('.page').forEach(p =>
     p.classList.toggle('active', p.id === 'page-cases')
   );
-  // 케이스 로드
   S.casesLoaded = true;
   fetchCases(true);
   toast(`Open cases · PIC: ${picName}`);
@@ -1122,8 +1120,7 @@ function applyServerPicklists(picklists,fields,labels){
 function fillSelect(id,allLabel,options){
   const el=document.getElementById(id);if(!el||el.tagName!=='SELECT') return;
   const cur=el.value;
-  const openOpt=id==='f-status'?'<option value="__open__">Open (Not Closed)</option>':'';
-  el.innerHTML=`<option value="">${allLabel}</option>${openOpt}`+options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+  el.innerHTML=`<option value="">${allLabel}</option>`+options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
   el.value=cur;
 }
 function replaceInputWithSelect(id,label,options){
@@ -1299,6 +1296,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-clear').addEventListener('click',()=>{
     ['f-search','f-status','f-priority','f-dept','f-pic','f-date-from','f-date-to']
       .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    S.openOnly=false;
     fetchCases(true);
   });
   document.getElementById('f-search').addEventListener('keydown',e=>{if(e.key==='Enter')fetchCases(true);});
