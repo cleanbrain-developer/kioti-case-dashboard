@@ -134,18 +134,6 @@ body{
 .ff input:focus,.ff select:focus{border-color:var(--blue2);box-shadow:var(--ring)}
 [data-theme="dark"] .ff input,[data-theme="dark"] .ff select{background:var(--card2)}
 .filter-actions{margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.active-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:4px}
-.active-filter-chip{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:3px 10px 3px 10px;border-radius:20px;font-size:11px;font-weight:600;
-  background:rgba(239,68,68,.1);color:#dc2626;
-  border:1px solid rgba(239,68,68,.28);white-space:nowrap}
-.active-filter-chip button{
-  background:none;border:none;cursor:pointer;padding:0;margin-left:2px;
-  color:inherit;opacity:.7;font-size:13px;line-height:1;display:flex;align-items:center}
-.active-filter-chip button:hover{opacity:1}
-[data-theme="dark"] .active-filter-chip{
-  background:rgba(248,113,113,.12);color:#f87171;border-color:rgba(248,113,113,.3)}
 
 /* ── Buttons ── */
 .btn{
@@ -650,13 +638,6 @@ span.flatpickr-weekday{
         <div class="filter-actions">
           <button class="btn btn-primary" id="btn-apply">Apply Filters</button>
           <button class="btn btn-secondary" id="btn-clear">Clear All</button>
-          <div class="active-filters" id="active-filters" style="display:none">
-            <span style="font-size:11px;color:var(--muted);font-weight:500">Active:</span>
-            <span class="active-filter-chip" id="chip-open-only" style="display:none">
-              Open Only
-              <button onclick="clearOpenOnly()" title="Remove filter">✕</button>
-            </span>
-          </div>
         </div>
       </div>
     </div>
@@ -799,7 +780,7 @@ function localToISO(dateStr, end) {
 const S = {
   demoMode:false, instanceUrl:'', totalCount:0, page:1, pageSize:25,
   viewMode:'paging', sortField:'CreatedDate', sortDir:'DESC',
-  loading:false, allLoaded:false, casesLoaded:false, openOnly:false,
+  loading:false, allLoaded:false, casesLoaded:false,
   fields:{ department:'Department__c', personInCharge:'PersonInCharge__c', moduleLevel:'ModuleLevel__c' },
 };
 let INS_DEPT_SELECTED = null, INS_OPEN_BY_DEPT = [], INS_OPEN_BY_PIC = [];
@@ -827,7 +808,6 @@ function filterParams(){
   const p={page:S.page,pageSize:S.pageSize,sortField:S.sortField,sortDir:S.sortDir};
   const search=g('f-search'); if(search) p.search=search;
   const status=g('f-status'); if(status) p.status=status;
-  if(S.openOnly) p.isClosed='false';
   const prio=g('f-priority'); if(prio) p.priority=prio;
   const dept=g('f-dept');     if(dept) p.department=dept;
   const pic=g('f-pic');       if(pic) p.personInCharge=pic;
@@ -887,7 +867,6 @@ function mockFilter(){
   let r=MOCK.filter(c=>{
     if(search&&!(c.Subject.toLowerCase().includes(search)||c.CaseNumber.includes(search))) return false;
     if(status&&c.Status!==status) return false;
-    if(S.openOnly&&c.Status==='Closed') return false;
     if(prio&&c.Priority!==prio) return false;
     if(dept&&!(c.Department__c||'').toLowerCase().includes(dept)) return false;
     if(pic&&!((c._picName||'').toLowerCase().includes(pic))) return false;
@@ -1013,19 +992,6 @@ async function fetchDrillLive(deptName){
   }catch(e){toast('Drill error: '+e.message,'error');}
 }
 
-/* ── Open Only indicator ── */
-function syncOpenOnlyBadge() {
-  const chip = document.getElementById('chip-open-only');
-  const wrap = document.getElementById('active-filters');
-  if (!chip || !wrap) return;
-  chip.style.display = S.openOnly ? '' : 'none';
-  wrap.style.display = S.openOnly ? '' : 'none';
-}
-window.clearOpenOnly = function() {
-  S.openOnly = false;
-  syncOpenOnlyBadge();
-  fetchCases(true);
-};
 
 /* ── Dispatch ── */
 function fetchCases(r=true){ S.demoMode?fetchCasesDemo(r):fetchCasesLive(r); }
@@ -1050,9 +1016,6 @@ function renderDeptChart(deptData,selectedDept,filterDept){
   });
 }
 function goToCasesWithPic(picName) {
-  // Open 필터 활성화 (IsClosed = false, 드롭다운 변경 없음)
-  S.openOnly = true;
-  syncOpenOnlyBadge();
   // 필터 패널 열기
   const fb = document.getElementById('filter-body');
   const fh = document.getElementById('filter-hdr');
@@ -1060,7 +1023,9 @@ function goToCasesWithPic(picName) {
     fb.classList.add('open');
     fh && fh.classList.add('open');
   }
-  // PIC 필터 설정
+  // Status = Open, PIC 필터 설정
+  const statusEl = document.getElementById('f-status');
+  if (statusEl) statusEl.value = 'Open';
   const picEl = document.getElementById('f-pic');
   if (picEl) picEl.value = picName;
   // Cases 탭으로 전환
@@ -1330,8 +1295,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-clear').addEventListener('click',()=>{
     ['f-search','f-status','f-priority','f-dept','f-pic','f-date-from','f-date-to']
       .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    S.openOnly=false;
-    syncOpenOnlyBadge();
     fetchCases(true);
   });
   document.getElementById('f-search').addEventListener('keydown',e=>{if(e.key==='Enter')fetchCases(true);});
