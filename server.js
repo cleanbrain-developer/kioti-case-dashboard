@@ -7,7 +7,6 @@ const express = require('express');
 const db      = require('./db');
 const app     = express();
 const PORT           = process.env.PORT || 3000;
-const SYNC_MIN       = parseInt(process.env.SYNC_INTERVAL_MIN || '15', 10);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'kioti';
 
 app.use(express.json());
@@ -278,14 +277,6 @@ function scheduleDailySync() {
   }, delay);
 }
 
-/* 15분 간격 백그라운드 동기화 */
-function startBackgroundSync() {
-  const ms = SYNC_MIN * 60 * 1000;
-  setInterval(async () => {
-    console.log(`[Sync] Background sync triggered (every ${SYNC_MIN} min)`);
-    await syncFromSalesforce();
-  }, ms);
-}
 
 /* ══════════════════════════════════════
    DB query helpers
@@ -345,7 +336,7 @@ function dbRowToRecord(r) {
 ══════════════════════════════════════ */
 
 /* Health */
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', async (_req, res) => {
   const dbOk   = await db.isAvailable();
   const lastSync = await db.getLastSync();
   const caseCount = dbOk ? await db.getCaseCount() : null;
@@ -427,7 +418,7 @@ app.get('/api/cases', async (req, res) => {
 });
 
 /* Insights — DB 우선, SF 폴백 */
-app.get('/api/insights', async (req, res) => {
+app.get('/api/insights', async (_req, res) => {
   if (!isConfigured()) return res.status(503).json({ error: 'Salesforce not configured' });
 
   /* ─ DB route ─ */
@@ -629,7 +620,6 @@ app.listen(PORT, async () => {
     } else {
       console.log(`   DB: ${count.toLocaleString()} cases cached`);
     }
-    startBackgroundSync();
     scheduleDailySync();
   }
 });
