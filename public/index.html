@@ -323,6 +323,17 @@ a.pic-link:hover{text-decoration:underline;text-underline-offset:2px}
 [data-theme="dark"] .dept-selected-badge{
   background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2);color:var(--blue3)}
 
+/* ── Open Only badge ── */
+.open-only-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;
+  background:rgba(239,68,68,.1);color:#dc2626;
+  border:1px solid rgba(239,68,68,.25);cursor:pointer;
+  font-family:'Inter',sans-serif;transition:all .2s;letter-spacing:.2px}
+.open-only-badge:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4)}
+[data-theme="dark"] .open-only-badge{
+  background:rgba(239,68,68,.15);color:#f87171;border-color:rgba(239,68,68,.3)}
+
 /* ── Sync button ── */
 .sync-btn{
   width:34px;height:34px;border-radius:50%;
@@ -644,6 +655,9 @@ span.flatpickr-weekday{
 
     <div class="toolbar">
       <div class="total-count">Total: <strong id="total-count">—</strong> cases</div>
+      <button class="open-only-badge" id="open-only-badge" style="display:none" onclick="clearOpenOnly()">
+        Open Only &nbsp;✕
+      </button>
       <div class="t-space"></div>
       <select class="pg-size" id="pg-size">
         <option value="25">25 / page</option><option value="50">50 / page</option><option value="100">100 / page</option>
@@ -780,7 +794,7 @@ function localToISO(dateStr, end) {
 const S = {
   demoMode:false, instanceUrl:'', totalCount:0, page:1, pageSize:25,
   viewMode:'paging', sortField:'CreatedDate', sortDir:'DESC',
-  loading:false, allLoaded:false, casesLoaded:false,
+  loading:false, allLoaded:false, casesLoaded:false, openOnly:false,
   fields:{ department:'Department__c', personInCharge:'PersonInCharge__c', moduleLevel:'ModuleLevel__c' },
 };
 let INS_DEPT_SELECTED = null, INS_OPEN_BY_DEPT = [], INS_OPEN_BY_PIC = [];
@@ -808,6 +822,7 @@ function filterParams(){
   const p={page:S.page,pageSize:S.pageSize,sortField:S.sortField,sortDir:S.sortDir};
   const search=g('f-search'); if(search) p.search=search;
   const status=g('f-status'); if(status) p.status=status;
+  if(S.openOnly) p.isClosed='false';
   const prio=g('f-priority'); if(prio) p.priority=prio;
   const dept=g('f-dept');     if(dept) p.department=dept;
   const pic=g('f-pic');       if(pic) p.personInCharge=pic;
@@ -867,6 +882,7 @@ function mockFilter(){
   let r=MOCK.filter(c=>{
     if(search&&!(c.Subject.toLowerCase().includes(search)||c.CaseNumber.includes(search))) return false;
     if(status&&c.Status!==status) return false;
+    if(S.openOnly&&c.Status==='Closed') return false;
     if(prio&&c.Priority!==prio) return false;
     if(dept&&!(c.Department__c||'').toLowerCase().includes(dept)) return false;
     if(pic&&!((c._picName||'').toLowerCase().includes(pic))) return false;
@@ -992,6 +1008,16 @@ async function fetchDrillLive(deptName){
   }catch(e){toast('Drill error: '+e.message,'error');}
 }
 
+/* ── Open Only badge ── */
+function syncOpenOnlyBadge(){
+  document.getElementById('open-only-badge').style.display = S.openOnly ? '' : 'none';
+}
+window.clearOpenOnly = function(){
+  S.openOnly = false;
+  syncOpenOnlyBadge();
+  fetchCases(true);
+};
+
 /* ── Dispatch ── */
 function fetchCases(r=true){ S.demoMode?fetchCasesDemo(r):fetchCasesLive(r); }
 function fetchMore(){ S.demoMode?fetchMoreDemo():fetchMoreLive(); }
@@ -1015,6 +1041,9 @@ function renderDeptChart(deptData,selectedDept,filterDept){
   });
 }
 function goToCasesWithPic(picName) {
+  // Open 전용 필터 활성화
+  S.openOnly = true;
+  syncOpenOnlyBadge();
   // 필터 패널 열기
   const fb = document.getElementById('filter-body');
   const fh = document.getElementById('filter-hdr');
@@ -1022,7 +1051,7 @@ function goToCasesWithPic(picName) {
     fb.classList.add('open');
     fh && fh.classList.add('open');
   }
-  // PIC 필터 값 설정 (input 또는 select 모두 대응)
+  // PIC 필터 값 설정
   const picEl = document.getElementById('f-pic');
   if (picEl) picEl.value = picName;
   // Cases 탭으로 전환
@@ -1035,7 +1064,7 @@ function goToCasesWithPic(picName) {
   // 케이스 로드
   S.casesLoaded = true;
   fetchCases(true);
-  toast(`Filtering by PIC: ${picName}`);
+  toast(`Open cases · PIC: ${picName}`);
 }
 
 function renderPicChart(picData,title){
@@ -1293,6 +1322,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-clear').addEventListener('click',()=>{
     ['f-search','f-status','f-priority','f-dept','f-pic','f-date-from','f-date-to']
       .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    S.openOnly=false; syncOpenOnlyBadge();
     fetchCases(true);
   });
   document.getElementById('f-search').addEventListener('keydown',e=>{if(e.key==='Enter')fetchCases(true);});

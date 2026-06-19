@@ -139,14 +139,15 @@ function resolveSortField(f) {
 }
 function buildWhere(q) {
   const cls = [];
-  if (q.search)         cls.push(`(Subject LIKE '%${soqlEsc(q.search)}%' OR CaseNumber LIKE '%${soqlEsc(q.search)}%')`);
-  if (q.status)         cls.push(`Status = '${soqlEsc(q.status)}'`);
-  if (q.priority)       cls.push(`Priority = '${soqlEsc(q.priority)}'`);
-  if (q.department)     cls.push(`${FIELDS.department} LIKE '%${soqlEsc(q.department)}%'`);
-  if (q.personInCharge) cls.push(`${FIELDS.personInCharge} LIKE '%${soqlEsc(q.personInCharge)}%'`);
-  if (q.moduleLevel)    cls.push(`${FIELDS.moduleLevel} LIKE '%${soqlEsc(q.moduleLevel)}%'`);
-  if (q.dateFrom)       cls.push(`CreatedDate >= ${q.dateFrom}`);
-  if (q.dateTo)         cls.push(`CreatedDate <= ${q.dateTo}`);
+  if (q.search)            cls.push(`(Subject LIKE '%${soqlEsc(q.search)}%' OR CaseNumber LIKE '%${soqlEsc(q.search)}%')`);
+  if (q.status)            cls.push(`Status = '${soqlEsc(q.status)}'`);
+  if (q.isClosed === 'false') cls.push(`IsClosed = false`);
+  if (q.priority)          cls.push(`Priority = '${soqlEsc(q.priority)}'`);
+  if (q.department)        cls.push(`${FIELDS.department} LIKE '%${soqlEsc(q.department)}%'`);
+  if (q.personInCharge)    cls.push(`${FIELDS.personInCharge} LIKE '%${soqlEsc(q.personInCharge)}%'`);
+  if (q.moduleLevel)       cls.push(`${FIELDS.moduleLevel} LIKE '%${soqlEsc(q.moduleLevel)}%'`);
+  if (q.dateFrom)          cls.push(`CreatedDate >= ${q.dateFrom}`);
+  if (q.dateTo)            cls.push(`CreatedDate <= ${q.dateTo}`);
   return cls.length ? 'WHERE ' + cls.join(' AND ') : '';
 }
 
@@ -303,8 +304,9 @@ function buildDBWhere(q) {
     const i = params.length;
     conds.push(`(subject ILIKE $${i} OR case_number ILIKE $${i})`);
   }
-  if (q.status)         add('status ILIKE ?',      q.status);
-  if (q.priority)       add('priority ILIKE ?',    q.priority);
+  if (q.status)            add('status ILIKE ?',      q.status);
+  if (q.isClosed === 'false') add('is_closed = ?', false);
+  if (q.priority)          add('priority ILIKE ?',    q.priority);
   if (q.department)     add('department ILIKE ?',  `%${q.department}%`);
   if (q.personInCharge) add('pic_name ILIKE ?',    `%${q.personInCharge}%`);
   if (q.moduleLevel)    add('module_level ILIKE ?',`%${q.moduleLevel}%`);
