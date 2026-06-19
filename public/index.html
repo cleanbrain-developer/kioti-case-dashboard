@@ -590,6 +590,7 @@ span.flatpickr-weekday{
           <span class="dept-selected-badge" id="dept-selected-badge" style="display:none"></span>
           <button class="btn-clear-drill" id="btn-clear-drill" style="display:none" onclick="clearDeptDrill()">✕ All Depts</button>
         </div>
+        <p class="click-hint">Click a bar to view that person's cases in Cases tab</p>
         <div class="chart-wrap" style="height:300px"><canvas id="ch-open-pic"></canvas></div>
       </div>
     </div>
@@ -1013,6 +1014,30 @@ function renderDeptChart(deptData,selectedDept,filterDept){
     }
   });
 }
+function goToCasesWithPic(picName) {
+  // 필터 패널 열기
+  const fb = document.getElementById('filter-body');
+  const fh = document.getElementById('filter-hdr');
+  if (fb && !fb.classList.contains('open')) {
+    fb.classList.add('open');
+    fh && fh.classList.add('open');
+  }
+  // PIC 필터 값 설정 (input 또는 select 모두 대응)
+  const picEl = document.getElementById('f-pic');
+  if (picEl) picEl.value = picName;
+  // Cases 탭으로 전환
+  document.querySelectorAll('.nav-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.tab === 'cases')
+  );
+  document.querySelectorAll('.page').forEach(p =>
+    p.classList.toggle('active', p.id === 'page-cases')
+  );
+  // 케이스 로드
+  S.casesLoaded = true;
+  fetchCases(true);
+  toast(`Filtering by PIC: ${picName}`);
+}
+
 function renderPicChart(picData,title){
   document.getElementById('pic-drill-title').textContent=title||'Open Cases by Person In Charge';
   const labels=picData.map(d=>d.name||d.key),counts=picData.map(d=>d.count);
@@ -1023,6 +1048,8 @@ function renderPicChart(picData,title){
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false}},
       scales:{x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:getGridColor()}}},
+      onClick:(_,elements)=>{ if(elements.length) goToCasesWithPic(labels[elements[0].index]); },
+      onHover:(event,elements)=>{ event.native.target.style.cursor=elements.length?'pointer':'default'; },
     }
   });
 }
