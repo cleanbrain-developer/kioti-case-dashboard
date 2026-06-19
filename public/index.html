@@ -418,6 +418,14 @@ a.pic-link:hover{text-decoration:underline;text-underline-offset:2px}
 .flatpickr-current-month span.cur-month:hover{background:rgba(255,255,255,.12)}
 .flatpickr-current-month input.cur-year{
   color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;padding:2px 0 2px 4px}
+.flatpickr-current-month .flatpickr-monthDropdown-months{
+  appearance:none;background:rgba(255,255,255,.15);border:none;border-radius:6px;
+  color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;
+  padding:3px 22px 3px 8px;cursor:pointer;outline:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 6px center}
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover{background-color:rgba(255,255,255,.25)}
+.flatpickr-current-month .flatpickr-monthDropdown-months option{background:#1e3a5f;color:#fff}
 .numInputWrapper{display:flex;align-items:center}
 .numInputWrapper:hover{background:transparent}
 .numInputWrapper span{border:none}
@@ -632,8 +640,8 @@ span.flatpickr-weekday{
             <select id="f-priority"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select></div>
           <div class="ff"><label>Department</label><input type="text" id="f-dept" placeholder="Department…" /></div>
           <div class="ff"><label>Person In Charge</label><input type="text" id="f-pic" placeholder="Person name…" /></div>
-          <div class="ff"><label>Created From</label><input type="text" id="f-date-from" placeholder="YYYY-MM-DD" readonly /></div>
-          <div class="ff"><label>Created To</label><input type="text" id="f-date-to" placeholder="YYYY-MM-DD" readonly /></div>
+          <div class="ff"><label>Created From</label><input type="text" id="f-date-from" placeholder="YYYY-MM-DD" /></div>
+          <div class="ff"><label>Created To</label><input type="text" id="f-date-to" placeholder="YYYY-MM-DD" /></div>
         </div>
         <div class="filter-actions">
           <button class="btn btn-primary" id="btn-apply">Apply Filters</button>
@@ -1322,8 +1330,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
   updateSortHeaders();
 
-  // Date pickers
-  const fpOpts = { locale:'en', dateFormat:'Y-m-d', disableMobile:true, monthSelectorType:'static' };
+  // Date pickers — allowInput: type directly; dropdown: click month/year to change
+  const fpOpts = {
+    locale:'en', dateFormat:'Y-m-d', disableMobile:true,
+    allowInput:true, monthSelectorType:'dropdown'
+  };
   flatpickr('#f-date-from', fpOpts);
   flatpickr('#f-date-to',   fpOpts);
 
