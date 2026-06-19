@@ -133,7 +133,7 @@ body{
   outline:none;transition:border-color .2s,box-shadow .2s}
 .ff input:focus,.ff select:focus{border-color:var(--blue2);box-shadow:var(--ring)}
 [data-theme="dark"] .ff input,[data-theme="dark"] .ff select{background:var(--card2)}
-.filter-actions{margin-top:14px;display:flex;gap:8px}
+.filter-actions{margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
 /* ── Buttons ── */
 .btn{
@@ -418,6 +418,14 @@ a.pic-link:hover{text-decoration:underline;text-underline-offset:2px}
 .flatpickr-current-month span.cur-month:hover{background:rgba(255,255,255,.12)}
 .flatpickr-current-month input.cur-year{
   color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;padding:2px 0 2px 4px}
+.flatpickr-current-month .flatpickr-monthDropdown-months{
+  appearance:none;background:rgba(255,255,255,.15);border:none;border-radius:6px;
+  color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;
+  padding:3px 22px 3px 8px;cursor:pointer;outline:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 6px center}
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover{background-color:rgba(255,255,255,.25)}
+.flatpickr-current-month .flatpickr-monthDropdown-months option{background:#1e3a5f;color:#fff}
 .numInputWrapper{display:flex;align-items:center}
 .numInputWrapper:hover{background:transparent}
 .numInputWrapper span{border:none}
@@ -590,6 +598,7 @@ span.flatpickr-weekday{
           <span class="dept-selected-badge" id="dept-selected-badge" style="display:none"></span>
           <button class="btn-clear-drill" id="btn-clear-drill" style="display:none" onclick="clearDeptDrill()">✕ All Depts</button>
         </div>
+        <p class="click-hint">Click a bar to view that person's cases in Cases tab</p>
         <div class="chart-wrap" style="height:300px"><canvas id="ch-open-pic"></canvas></div>
       </div>
     </div>
@@ -631,8 +640,8 @@ span.flatpickr-weekday{
             <select id="f-priority"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select></div>
           <div class="ff"><label>Department</label><input type="text" id="f-dept" placeholder="Department…" /></div>
           <div class="ff"><label>Person In Charge</label><input type="text" id="f-pic" placeholder="Person name…" /></div>
-          <div class="ff"><label>Created From</label><input type="text" id="f-date-from" placeholder="YYYY-MM-DD" readonly /></div>
-          <div class="ff"><label>Created To</label><input type="text" id="f-date-to" placeholder="YYYY-MM-DD" readonly /></div>
+          <div class="ff"><label>Created From</label><input type="text" id="f-date-from" placeholder="YYYY-MM-DD" /></div>
+          <div class="ff"><label>Created To</label><input type="text" id="f-date-to" placeholder="YYYY-MM-DD" /></div>
         </div>
         <div class="filter-actions">
           <button class="btn btn-primary" id="btn-apply">Apply Filters</button>
@@ -991,6 +1000,7 @@ async function fetchDrillLive(deptName){
   }catch(e){toast('Drill error: '+e.message,'error');}
 }
 
+
 /* ── Dispatch ── */
 function fetchCases(r=true){ S.demoMode?fetchCasesDemo(r):fetchCasesLive(r); }
 function fetchMore(){ S.demoMode?fetchMoreDemo():fetchMoreLive(); }
@@ -1013,6 +1023,31 @@ function renderDeptChart(deptData,selectedDept,filterDept){
     }
   });
 }
+function goToCasesWithPic(picName) {
+  // 필터 패널 열기
+  const fb = document.getElementById('filter-body');
+  const fh = document.getElementById('filter-hdr');
+  if (fb && !fb.classList.contains('open')) {
+    fb.classList.add('open');
+    fh && fh.classList.add('open');
+  }
+  // Status = Open, PIC 필터 설정
+  const statusEl = document.getElementById('f-status');
+  if (statusEl) statusEl.value = 'Open';
+  const picEl = document.getElementById('f-pic');
+  if (picEl) picEl.value = picName;
+  // Cases 탭으로 전환
+  document.querySelectorAll('.nav-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.tab === 'cases')
+  );
+  document.querySelectorAll('.page').forEach(p =>
+    p.classList.toggle('active', p.id === 'page-cases')
+  );
+  S.casesLoaded = true;
+  fetchCases(true);
+  toast(`Open cases · PIC: ${picName}`);
+}
+
 function renderPicChart(picData,title){
   document.getElementById('pic-drill-title').textContent=title||'Open Cases by Person In Charge';
   const labels=picData.map(d=>d.name||d.key),counts=picData.map(d=>d.count);
@@ -1023,6 +1058,8 @@ function renderPicChart(picData,title){
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false}},
       scales:{x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:getGridColor()}}},
+      onClick:(_,elements)=>{ if(elements.length) goToCasesWithPic(labels[elements[0].index]); },
+      onHover:(event,elements)=>{ event.native.target.style.cursor=elements.length?'pointer':'default'; },
     }
   });
 }
@@ -1293,8 +1330,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
   updateSortHeaders();
 
-  // Date pickers
-  const fpOpts = { locale:'en', dateFormat:'Y-m-d', disableMobile:true, monthSelectorType:'static' };
+  // Date pickers — allowInput: type directly; dropdown: click month/year to change
+  const fpOpts = {
+    locale:'en', dateFormat:'Y-m-d', disableMobile:true,
+    allowInput:true, monthSelectorType:'dropdown'
+  };
   flatpickr('#f-date-from', fpOpts);
   flatpickr('#f-date-to',   fpOpts);
 

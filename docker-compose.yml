@@ -10,7 +10,6 @@ services:
     env_file: .env                       # SF 인증정보 주입
     environment:
       DATABASE_URL: postgresql://kioti:${DB_PASSWORD:-kioti1234}@db:5432/kioti_dashboard
-      SYNC_INTERVAL_MIN: "${SYNC_INTERVAL_MIN:-15}"
     depends_on:
       db:
         condition: service_healthy

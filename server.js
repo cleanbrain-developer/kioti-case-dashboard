@@ -7,7 +7,6 @@ const express = require('express');
 const db      = require('./db');
 const app     = express();
 const PORT           = process.env.PORT || 3000;
-const SYNC_MIN       = parseInt(process.env.SYNC_INTERVAL_MIN || '15', 10);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'kioti';
 
 app.use(express.json());
@@ -140,14 +139,15 @@ function resolveSortField(f) {
 }
 function buildWhere(q) {
   const cls = [];
-  if (q.search)         cls.push(`(Subject LIKE '%${soqlEsc(q.search)}%' OR CaseNumber LIKE '%${soqlEsc(q.search)}%')`);
-  if (q.status)         cls.push(`Status = '${soqlEsc(q.status)}'`);
-  if (q.priority)       cls.push(`Priority = '${soqlEsc(q.priority)}'`);
-  if (q.department)     cls.push(`${FIELDS.department} LIKE '%${soqlEsc(q.department)}%'`);
-  if (q.personInCharge) cls.push(`${FIELDS.personInCharge} LIKE '%${soqlEsc(q.personInCharge)}%'`);
-  if (q.moduleLevel)    cls.push(`${FIELDS.moduleLevel} LIKE '%${soqlEsc(q.moduleLevel)}%'`);
-  if (q.dateFrom)       cls.push(`CreatedDate >= ${q.dateFrom}`);
-  if (q.dateTo)         cls.push(`CreatedDate <= ${q.dateTo}`);
+  if (q.search)            cls.push(`(Subject LIKE '%${soqlEsc(q.search)}%' OR CaseNumber LIKE '%${soqlEsc(q.search)}%')`);
+  if (q.status)            cls.push(`Status = '${soqlEsc(q.status)}'`);
+  if (q.isClosed === 'false') cls.push(`IsClosed = false`);
+  if (q.priority)          cls.push(`Priority = '${soqlEsc(q.priority)}'`);
+  if (q.department)        cls.push(`${FIELDS.department} LIKE '%${soqlEsc(q.department)}%'`);
+  if (q.personInCharge)    cls.push(`${FIELDS.personInCharge} LIKE '%${soqlEsc(q.personInCharge)}%'`);
+  if (q.moduleLevel)       cls.push(`${FIELDS.moduleLevel} LIKE '%${soqlEsc(q.moduleLevel)}%'`);
+  if (q.dateFrom)          cls.push(`CreatedDate >= ${q.dateFrom}`);
+  if (q.dateTo)            cls.push(`CreatedDate <= ${q.dateTo}`);
   return cls.length ? 'WHERE ' + cls.join(' AND ') : '';
 }
 
@@ -278,14 +278,6 @@ function scheduleDailySync() {
   }, delay);
 }
 
-/* 15분 간격 백그라운드 동기화 */
-function startBackgroundSync() {
-  const ms = SYNC_MIN * 60 * 1000;
-  setInterval(async () => {
-    console.log(`[Sync] Background sync triggered (every ${SYNC_MIN} min)`);
-    await syncFromSalesforce();
-  }, ms);
-}
 
 /* ══════════════════════════════════════
    DB query helpers
@@ -312,8 +304,9 @@ function buildDBWhere(q) {
     const i = params.length;
     conds.push(`(subject ILIKE $${i} OR case_number ILIKE $${i})`);
   }
-  if (q.status)         add('status ILIKE ?',      q.status);
-  if (q.priority)       add('priority ILIKE ?',    q.priority);
+  if (q.status)            add('status ILIKE ?',      q.status);
+  if (q.isClosed === 'false') add('is_closed = ?', false);
+  if (q.priority)          add('priority ILIKE ?',    q.priority);
   if (q.department)     add('department ILIKE ?',  `%${q.department}%`);
   if (q.personInCharge) add('pic_name ILIKE ?',    `%${q.personInCharge}%`);
   if (q.moduleLevel)    add('module_level ILIKE ?',`%${q.moduleLevel}%`);
@@ -345,7 +338,7 @@ function dbRowToRecord(r) {
 ══════════════════════════════════════ */
 
 /* Health */
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', async (_req, res) => {
   const dbOk   = await db.isAvailable();
   const lastSync = await db.getLastSync();
   const caseCount = dbOk ? await db.getCaseCount() : null;
@@ -378,7 +371,7 @@ app.get('/api/cases', async (req, res) => {
   if (!isConfigured()) return res.status(503).json({ error: 'Salesforce not configured' });
 
   const {
-    search, status, priority, department, personInCharge, moduleLevel, dateFrom, dateTo,
+    search, status, isClosed, priority, department, personInCharge, moduleLevel, dateFrom, dateTo,
     page = 1, pageSize = 25, sortField = 'CreatedDate', sortDir = 'DESC',
   } = req.query;
 
@@ -389,7 +382,7 @@ app.get('/api/cases', async (req, res) => {
   /* ─ DB route ─ */
   if (await db.isAvailable() && await db.getCaseCount() > 0) {
     try {
-      const { where, params } = buildDBWhere({ search, status, priority, department, personInCharge, moduleLevel, dateFrom, dateTo });
+      const { where, params } = buildDBWhere({ search, status, isClosed, priority, department, personInCharge, moduleLevel, dateFrom, dateTo });
       const dbCol = DB_SORT_MAP[sortField] || 'created_date';
       const [countRes, rowsRes] = await Promise.all([
         db.query(`SELECT COUNT(*) FROM cases ${where}`, params),
@@ -409,7 +402,7 @@ app.get('/api/cases', async (req, res) => {
   try {
     const safeSort = resolveSortField(sortField);
     const safeOffset = Math.min(offset, 2000);
-    const where = buildWhere({ search, status, priority, department, personInCharge, moduleLevel, dateFrom, dateTo });
+    const where = buildWhere({ search, status, isClosed, priority, department, personInCharge, moduleLevel, dateFrom, dateTo });
     const picRel = FIELDS.personInCharge.replace(/__c$/i, '__r');
     const selectFields = ['Id','CaseNumber','Subject','Status','Priority',
       FIELDS.department, FIELDS.personInCharge, `${picRel}.Name`, FIELDS.moduleLevel,
@@ -427,7 +420,7 @@ app.get('/api/cases', async (req, res) => {
 });
 
 /* Insights — DB 우선, SF 폴백 */
-app.get('/api/insights', async (req, res) => {
+app.get('/api/insights', async (_req, res) => {
   if (!isConfigured()) return res.status(503).json({ error: 'Salesforce not configured' });
 
   /* ─ DB route ─ */
@@ -629,7 +622,6 @@ app.listen(PORT, async () => {
     } else {
       console.log(`   DB: ${count.toLocaleString()} cases cached`);
     }
-    startBackgroundSync();
     scheduleDailySync();
   }
 });
