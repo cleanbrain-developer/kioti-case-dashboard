@@ -93,6 +93,7 @@ export default function DeptChart({ data, selected, onSelect }: Props) {
         name: 'Closed',
         type: 'bar',
         stack: 'total',
+        color: closedColor,
         data: closeds.map((v, i) => ({
           value: v,
           itemStyle: {
