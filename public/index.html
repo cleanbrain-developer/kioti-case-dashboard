@@ -417,19 +417,24 @@ a.pic-link:hover{text-decoration:underline;text-underline-offset:2px}
   color:#fff;font-weight:700;font-size:13px;padding:0 4px;border-radius:4px;transition:background .15s}
 .flatpickr-current-month span.cur-month:hover{background:rgba(255,255,255,.12)}
 .flatpickr-current-month input.cur-year{
-  color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;padding:2px 0 2px 4px}
+  color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;
+  padding:2px 4px;border-radius:4px;width:54px;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2)}
+.flatpickr-current-month input.cur-year:focus{background:rgba(255,255,255,.28);outline:none}
 .flatpickr-current-month .flatpickr-monthDropdown-months{
-  appearance:none;background:rgba(255,255,255,.15);border:none;border-radius:6px;
+  appearance:none;-webkit-appearance:none;
+  background:#1a3560;border:1px solid rgba(255,255,255,.25);border-radius:6px;
   color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;
   padding:3px 22px 3px 8px;cursor:pointer;outline:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 6px center}
-.flatpickr-current-month .flatpickr-monthDropdown-months:hover{background-color:rgba(255,255,255,.25)}
-.flatpickr-current-month .flatpickr-monthDropdown-months option{background:#1e3a5f;color:#fff}
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover{background-color:#1e4080}
+.flatpickr-current-month .flatpickr-monthDropdown-months option{
+  background:#1a3560 !important;color:#fff !important;font-weight:600}
 .numInputWrapper{display:flex;align-items:center}
 .numInputWrapper:hover{background:transparent}
-.numInputWrapper span{border:none}
-.numInputWrapper span:hover{background:rgba(255,255,255,.12)}
+.numInputWrapper span{border:none;opacity:1}
+.numInputWrapper span:hover{background:rgba(255,255,255,.2)}
 .numInputWrapper span svg path{fill:#fff}
 .flatpickr-weekdays{background:var(--card2);padding:6px 0;border-bottom:1px solid var(--border)}
 span.flatpickr-weekday{
@@ -1023,7 +1028,10 @@ function renderDeptChart(deptData,selectedDept,filterDept){
     }
   });
 }
-function goToCasesWithPic(picName) {
+function goToCasesWithPic(picName, deptName) {
+  // 기존 필터 전체 초기화
+  ['f-search','f-status','f-priority','f-dept','f-pic','f-date-from','f-date-to']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   // 필터 패널 열기
   const fb = document.getElementById('filter-body');
   const fh = document.getElementById('filter-hdr');
@@ -1031,11 +1039,13 @@ function goToCasesWithPic(picName) {
     fb.classList.add('open');
     fh && fh.classList.add('open');
   }
-  // Status = Open, PIC 필터 설정
-  const statusEl = document.getElementById('f-status');
-  if (statusEl) statusEl.value = 'Open';
+  // PIC + Department 필터 설정
   const picEl = document.getElementById('f-pic');
   if (picEl) picEl.value = picName;
+  if (deptName) {
+    const deptEl = document.getElementById('f-dept');
+    if (deptEl) deptEl.value = deptName;
+  }
   // Cases 탭으로 전환
   document.querySelectorAll('.nav-tab').forEach(t =>
     t.classList.toggle('active', t.dataset.tab === 'cases')
@@ -1045,7 +1055,7 @@ function goToCasesWithPic(picName) {
   );
   S.casesLoaded = true;
   fetchCases(true);
-  toast(`Open cases · PIC: ${picName}`);
+  toast(deptName ? `PIC: ${picName} · Dept: ${deptName}` : `PIC: ${picName}`);
 }
 
 function renderPicChart(picData,title){
@@ -1058,7 +1068,7 @@ function renderPicChart(picData,title){
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false}},
       scales:{x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:getGridColor()}}},
-      onClick:(_,elements)=>{ if(elements.length) goToCasesWithPic(labels[elements[0].index]); },
+      onClick:(_,elements)=>{ if(elements.length) goToCasesWithPic(labels[elements[0].index], INS_DEPT_SELECTED||''); },
       onHover:(event,elements)=>{ event.native.target.style.cursor=elements.length?'pointer':'default'; },
     }
   });
