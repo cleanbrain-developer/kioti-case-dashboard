@@ -238,13 +238,13 @@ export default function AgingPage() {
       {/* Stacked Bar Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <AgingGroupChart data={data.byDepartment}  title="Aging by Department"       theme={theme} />
-        <AgingGroupChart data={data.byModuleLevel} title="Aging by Level 1 (Module)" theme={theme} />
+        <AgingGroupChart data={data.byModuleLevel} title="Aging by Level 1 Ticket Type" theme={theme} />
       </div>
 
       {/* Detail Tables */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <AgingTable data={data.byDepartment}  title="Department Detail" />
-        <AgingTable data={data.byModuleLevel} title="Level 1 Detail" />
+        <AgingTable data={data.byModuleLevel} title="Level 1 Ticket Type Detail" />
       </div>
     </div>
   );
