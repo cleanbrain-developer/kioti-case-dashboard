@@ -22,19 +22,27 @@ export class SalesforceService {
   private tokenExpiry = 0;
   private metaCache: SfMeta | null = null;
 
-  readonly fields: SfFields = {
+  fields: SfFields = {
     department    : 'Department__c',
     personInCharge: 'PersonInCharge__c',
-    moduleLevel   : 'ModuleLevel__c',
+    moduleLevel   : 'TicketTypeLV1__c',
   };
 
   private readonly discoverPatterns = {
     department    : ['department', 'dept'],
     personInCharge: ['personincharge', 'incharge', 'charger', 'handler', 'responsible'],
-    moduleLevel   : ['modulelevel', 'modlevel', 'module'],
+    moduleLevel   : ['tickettypelv', 'lv1', 'tickettype', 'modulelevel', 'modlevel', 'module'],
   };
 
-  constructor(private config: ConfigService) {}
+  constructor(private config: ConfigService) {
+    // Allow explicit env var overrides (e.g. SF_FIELD_DEPT, SF_FIELD_PIC, SF_FIELD_MODULE)
+    const dept   = config.get<string>('SF_FIELD_DEPT');
+    const pic    = config.get<string>('SF_FIELD_PIC');
+    const module = config.get<string>('SF_FIELD_MODULE');
+    if (dept)   this.fields.department     = dept;
+    if (pic)    this.fields.personInCharge = pic;
+    if (module) this.fields.moduleLevel    = module;
+  }
 
   isConfigured(): boolean {
     return !!(
@@ -122,7 +130,13 @@ export class SalesforceService {
     }
 
     const { fields = [] } = await res.json() as any;
+    const envOverrides: Record<string, string | undefined> = {
+      department    : this.config.get('SF_FIELD_DEPT'),
+      personInCharge: this.config.get('SF_FIELD_PIC'),
+      moduleLevel   : this.config.get('SF_FIELD_MODULE'),
+    };
     for (const [key, patterns] of Object.entries(this.discoverPatterns)) {
+      if (envOverrides[key]) continue; // explicit env var wins — skip auto-discovery
       const scored = (fields as any[])
         .filter((f: any) => f.name.endsWith('__c'))
         .map((f: any) => {
