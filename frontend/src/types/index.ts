@@ -14,8 +14,7 @@ export interface CaseRecord {
 export interface CasesResponse {
   records: CaseRecord[];
   totalCount: number;
-  source: 'db' | 'sf';
-  sfLimitExceeded?: boolean;
+  source: 'db';
 }
 
 export interface KpiData {
@@ -31,7 +30,7 @@ export interface PicData  { key: string; count: number; }
 export interface TrendData { yr: number; mo: number; total: number; }
 
 export interface InsightsResponse {
-  source: 'db' | 'sf';
+  source: 'db';
   kpi: KpiData;
   openByDept: DeptData[];
   openByPic : PicData[];
@@ -45,7 +44,7 @@ export interface DrillRecord { name: string; count: number; }
 export interface DrillResponse {
   department: string | null;
   records: DrillRecord[];
-  source: 'db' | 'sf';
+  source: 'db';
 }
 
 export interface SyncStatus {
