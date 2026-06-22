@@ -1,10 +1,22 @@
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/appStore';
 import { Button } from '@/components/ui/button';
 import SyncButton from '@/components/sync/SyncButton';
+import { api } from '@/lib/api';
 
 export default function Header() {
   const { tab, setTab, toggleTheme, theme } = useAppStore();
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (sessionStorage.getItem('pinged')) {
+      api.todayVisitors().then(d => setVisitorCount(d.count)).catch(() => {});
+    } else {
+      sessionStorage.setItem('pinged', '1');
+      api.pingVisitor().then(d => setVisitorCount(d.count)).catch(() => {});
+    }
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -18,6 +30,13 @@ export default function Header() {
         </div>
 
         <div className="flex-1" />
+
+        {visitorCount !== null && (
+          <div className="flex items-center gap-1 text-slate-400 text-xs">
+            <Users size={12} />
+            <span>Today <span className="text-slate-200 font-medium">{visitorCount.toLocaleString()}</span></span>
+          </div>
+        )}
 
         <SyncButton />
 

@@ -25,6 +25,13 @@ model Case {
   @@map("cases")
 }
 
+model DailyVisit {
+  date  DateTime @id @db.Date
+  count Int      @default(0)
+
+  @@map("daily_visits")
+}
+
 model SyncLog {
   id          Int       @id @default(autoincrement())
   startedAt   DateTime  @default(now()) @map("started_at")
