@@ -109,18 +109,25 @@ export class CasesService {
       'Account.Name', 'CreatedDate',
     ].join(', ');
 
-    const offset = Math.min((page - 1) * pageSize, 2000);
-    const [casesData, countData] = await Promise.all([
-      this.sf.query(`SELECT ${selectFields} FROM Case ${soqlWhere} ORDER BY ${safeSort} ${safeDir} LIMIT ${pageSize} OFFSET ${offset}`),
-      this.sf.query(`SELECT COUNT() FROM Case ${soqlWhere}`),
-    ]);
+    const rawOffset = (page - 1) * pageSize;
+    const countData = await this.sf.query(`SELECT COUNT() FROM Case ${soqlWhere}`);
+    const totalCount = countData.totalSize;
+
+    // Salesforce SOQL OFFSET is capped at 2000. Return empty with flag instead of silently wrong data.
+    if (rawOffset > 2000) {
+      return { records: [], totalCount, source: 'sf', sfLimitExceeded: true };
+    }
+
+    const casesData = await this.sf.query(
+      `SELECT ${selectFields} FROM Case ${soqlWhere} ORDER BY ${safeSort} ${safeDir} LIMIT ${pageSize} OFFSET ${rawOffset}`
+    );
     const records = casesData.records.map((r: any) => ({
       ...r,
       _picName   : r[picRel]?.Name || null,
       department : r[this.sf.fields.department] || null,
       moduleLevel: r[this.sf.fields.moduleLevel] || null,
     }));
-    return { records, totalCount: countData.totalSize, source: 'sf' };
+    return { records, totalCount, source: 'sf' };
   }
 
   private buildSoqlWhere(q: QueryCasesDto): { where: string } {

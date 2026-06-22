@@ -31,7 +31,7 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date' }: Dat
         >
           <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <span className="flex-1 truncate text-xs">
-            {selected ? format(selected, 'yyyy-MM-dd', { locale: enUS }) : placeholder}
+            {selected ? format(selected, 'MMM d, yyyy', { locale: enUS }) : placeholder}
           </span>
           {selected && (
             <X
