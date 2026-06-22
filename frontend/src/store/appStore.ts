@@ -27,7 +27,7 @@ const DEFAULT_FILTER: CasesFilter = {
 
 export const useAppStore = create<AppState>((set) => ({
   tab  : 'insights',
-  theme: (localStorage.getItem('theme') as Theme) || 'light',
+  theme: (localStorage.getItem('theme') as Theme) || 'dark',
   filter: { ...DEFAULT_FILTER },
   insightsDept: null,
 
