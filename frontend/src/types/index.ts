@@ -47,6 +47,26 @@ export interface DrillResponse {
   source: 'db';
 }
 
+export interface AgingGroup {
+  key: string;
+  total: number;
+  avgAge: number;
+  maxAge: number;
+  buckets: Record<string, number>;
+}
+
+export interface AgingResponse {
+  source: 'db';
+  totalOpen: number;
+  avgAge: number;
+  maxAge: number;
+  over181Pct: number;
+  oldestCase: { caseNumber: string; subject: string | null; createdDate: string; ageDays: number } | null;
+  buckets: Array<{ bucket: string; total: number }>;
+  byDepartment: AgingGroup[];
+  byModuleLevel: AgingGroup[];
+}
+
 export interface SyncStatus {
   phase    : string;
   syncing  : boolean;

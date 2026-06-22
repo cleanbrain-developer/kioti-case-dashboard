@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { CasesFilter } from '@/types';
 
-type Tab = 'insights' | 'cases';
+type Tab = 'insights' | 'cases' | 'aging';
 type Theme = 'light' | 'dark';
 
 interface AppState {

@@ -66,6 +66,99 @@ export class InsightsService {
     };
   }
 
+  async getAging() {
+    const bucketExpr = `
+      CASE
+        WHEN GREATEST(0, CURRENT_DATE - created_date::date) <=  30 THEN '0-30'
+        WHEN GREATEST(0, CURRENT_DATE - created_date::date) <=  60 THEN '31-60'
+        WHEN GREATEST(0, CURRENT_DATE - created_date::date) <=  90 THEN '61-90'
+        WHEN GREATEST(0, CURRENT_DATE - created_date::date) <= 180 THEN '91-180'
+        WHEN GREATEST(0, CURRENT_DATE - created_date::date) <= 365 THEN '181-365'
+        ELSE '365+'
+      END`;
+    const openWhere = `is_closed = false AND created_date IS NOT NULL`;
+
+    const [kpi, oldest, buckets, deptBuckets, deptStats, modBuckets, modStats] =
+      await Promise.all([
+        this.prisma.$queryRawUnsafe<any[]>(`
+          SELECT COUNT(*) AS total_open,
+            ROUND(AVG(GREATEST(0, CURRENT_DATE - created_date::date)))::int AS avg_age,
+            MAX(GREATEST(0, CURRENT_DATE - created_date::date)) AS max_age
+          FROM cases WHERE ${openWhere}`),
+        this.prisma.$queryRawUnsafe<any[]>(`
+          SELECT case_number, subject, created_date,
+            GREATEST(0, CURRENT_DATE - created_date::date) AS age_days
+          FROM cases WHERE ${openWhere}
+          ORDER BY created_date ASC LIMIT 1`),
+        this.prisma.$queryRawUnsafe<any[]>(`
+          SELECT ${bucketExpr} AS bucket, COUNT(*) AS total
+          FROM cases WHERE ${openWhere} GROUP BY bucket`),
+        this.prisma.$queryRawUnsafe<any[]>(`
+          SELECT COALESCE(department, 'Unassigned') AS key,
+            ${bucketExpr} AS bucket, COUNT(*) AS cnt
+          FROM cases WHERE ${openWhere} GROUP BY key, bucket`),
+        this.prisma.$queryRawUnsafe<any[]>(`
+          SELECT COALESCE(department, 'Unassigned') AS key,
+            ROUND(AVG(GREATEST(0, CURRENT_DATE - created_date::date)))::int AS avg_age,
+            MAX(GREATEST(0, CURRENT_DATE - created_date::date)) AS max_age,
+            COUNT(*) AS total
+          FROM cases WHERE ${openWhere} GROUP BY key ORDER BY total DESC`),
+        this.prisma.$queryRawUnsafe<any[]>(`
+          SELECT COALESCE(module_level, 'Unassigned') AS key,
+            ${bucketExpr} AS bucket, COUNT(*) AS cnt
+          FROM cases WHERE ${openWhere} GROUP BY key, bucket`),
+        this.prisma.$queryRawUnsafe<any[]>(`
+          SELECT COALESCE(module_level, 'Unassigned') AS key,
+            ROUND(AVG(GREATEST(0, CURRENT_DATE - created_date::date)))::int AS avg_age,
+            MAX(GREATEST(0, CURRENT_DATE - created_date::date)) AS max_age,
+            COUNT(*) AS total
+          FROM cases WHERE ${openWhere} GROUP BY key ORDER BY total DESC`),
+      ]);
+
+    const BUCKET_ORDER = ['0-30', '31-60', '61-90', '91-180', '181-365', '365+'];
+
+    const buildGroups = (bucketRows: any[], statRows: any[]) => {
+      const bmap = new Map<string, Record<string, number>>();
+      for (const r of bucketRows) {
+        if (!bmap.has(r.key)) bmap.set(r.key, {});
+        bmap.get(r.key)![r.bucket] = Number(r.cnt);
+      }
+      return statRows.map(r => ({
+        key   : r.key,
+        total : Number(r.total),
+        avgAge: Number(r.avg_age),
+        maxAge: Number(r.max_age),
+        buckets: bmap.get(r.key) ?? {},
+      }));
+    };
+
+    const k          = kpi[0] ?? { total_open: 0, avg_age: 0, max_age: 0 };
+    const totalOpen  = Number(k.total_open);
+    const sortedBuckets = buckets
+      .map((b: any) => ({ bucket: b.bucket, total: Number(b.total) }))
+      .sort((a: any, b: any) => BUCKET_ORDER.indexOf(a.bucket) - BUCKET_ORDER.indexOf(b.bucket));
+    const over181 = sortedBuckets
+      .filter((b: any) => b.bucket === '181-365' || b.bucket === '365+')
+      .reduce((s: number, b: any) => s + b.total, 0);
+
+    return {
+      source      : 'db' as const,
+      totalOpen,
+      avgAge      : Number(k.avg_age),
+      maxAge      : Number(k.max_age),
+      over181Pct  : totalOpen > 0 ? Math.round(over181 / totalOpen * 100) : 0,
+      oldestCase  : oldest[0] ? {
+        caseNumber : oldest[0].case_number,
+        subject    : oldest[0].subject,
+        createdDate: oldest[0].created_date,
+        ageDays    : Number(oldest[0].age_days),
+      } : null,
+      buckets      : sortedBuckets,
+      byDepartment : buildGroups(deptBuckets, deptStats),
+      byModuleLevel: buildGroups(modBuckets, modStats),
+    };
+  }
+
   async getDrill(department?: string) {
     const rows = department
       ? await this.prisma.$queryRaw<any[]>`
