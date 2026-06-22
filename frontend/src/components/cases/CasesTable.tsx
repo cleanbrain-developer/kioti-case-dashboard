@@ -1,8 +1,10 @@
 import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store/appStore';
 import { formatDate } from '@/lib/utils';
+import { api } from '@/lib/api';
 import type { CaseRecord, CasesResponse } from '@/types';
 
 interface Props { data: CasesResponse | undefined; isLoading: boolean; onPageChange: () => void; }
@@ -31,6 +33,8 @@ const COLUMNS = [
 
 export default function CasesTable({ data, isLoading, onPageChange }: Props) {
   const { filter, setFilter } = useAppStore();
+  const { data: health } = useQuery({ queryKey: ['health'], queryFn: api.health, staleTime: 5 * 60_000 });
+  const instanceUrl = health?.instanceUrl?.replace(/\/$/, '') ?? 'https://login.salesforce.com';
   const { sortField, sortDir, page, pageSize } = filter;
 
   const totalCount = data?.totalCount ?? 0;
@@ -84,7 +88,7 @@ export default function CasesTable({ data, isLoading, onPageChange }: Props) {
                 <tr key={r.Id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 font-mono text-xs text-primary font-medium whitespace-nowrap">
                     <a
-                      href={`https://salesforce.com/${r.Id}`}
+                      href={`${instanceUrl}/${r.Id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="hover:underline"
