@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Case {
+  id          String    @id
+  caseNumber  String    @map("case_number")
+  subject     String?
+  status      String?
+  priority    String?
+  department  String?
+  picId       String?   @map("pic_id")
+  picName     String?   @map("pic_name")
+  moduleLevel String?   @map("module_level")
+  accountName String?   @map("account_name")
+  createdDate DateTime? @map("created_date")
+  isClosed    Boolean   @default(false) @map("is_closed")
+  syncedAt    DateTime  @default(now()) @map("synced_at")
+
+  @@map("cases")
+}
+
+model SyncLog {
+  id          Int       @id @default(autoincrement())
+  startedAt   DateTime  @default(now()) @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+  totalSynced Int?      @map("total_synced")
+  status      String    @default("running")
+  errorMsg    String?   @map("error_msg")
+
+  @@map("sync_log")
+}
