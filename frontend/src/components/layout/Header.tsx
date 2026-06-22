@@ -10,10 +10,10 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50">
       {/* Top bar */}
       <div className="h-14 bg-gradient-to-r from-slate-800 to-slate-900 flex items-center px-6 gap-4 shadow-lg">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-sm">K</div>
-          <span className="text-white font-bold text-lg tracking-tight">
-            Kioti <span className="text-amber-400">Case</span> Dashboard
+        <div className="flex items-center gap-3">
+          <img src="/kioti-logo.png" alt="KIOTI" className="h-8 w-auto object-contain rounded px-1 bg-white" />
+          <span className="text-white font-semibold text-base tracking-tight">
+            Case <span className="text-amber-400">Dashboard</span>
           </span>
         </div>
 
