@@ -4,15 +4,15 @@ import { QueryCasesDto } from './dto/query-cases.dto';
 import { Prisma } from '@prisma/client';
 
 const DB_SORT_MAP: Record<string, string> = {
-  CaseNumber    : 'case_number',
+  CaseNumber    : 'caseNumber',
   Subject       : 'subject',
   Status        : 'status',
   Priority      : 'priority',
   dept          : 'department',
-  pic           : 'pic_name',
-  module        : 'module_level',
-  'Account.Name': 'account_name',
-  CreatedDate   : 'created_date',
+  pic           : 'picName',
+  module        : 'moduleLevel',
+  'Account.Name': 'accountName',
+  CreatedDate   : 'createdDate',
 };
 
 @Injectable()
