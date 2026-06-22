@@ -20,14 +20,19 @@ interface AppState {
   goToCasesWithFilter: (patch: Partial<CasesFilter>) => void;
 }
 
+const VALID_TABS = ['insights', 'cases', 'aging'] as const;
+
 const DEFAULT_FILTER: CasesFilter = {
   search: '', status: '', priority: '', department: '',
   personInCharge: '', moduleLevel: '', dateFrom: '', dateTo: '',
   page: 1, pageSize: 25, sortField: 'CreatedDate', sortDir: 'DESC',
 };
 
+const initialHash = window.location.hash.slice(1) as Tab;
+const initialTab: Tab = VALID_TABS.includes(initialHash as any) ? initialHash : 'insights';
+
 export const useAppStore = create<AppState>((set) => ({
-  tab  : 'insights',
+  tab  : initialTab,
   theme: (localStorage.getItem('theme') as Theme) || 'dark',
   filter: { ...DEFAULT_FILTER },
   insightsDept: null,
