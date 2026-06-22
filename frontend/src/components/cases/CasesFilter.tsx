@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { api } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 
@@ -89,19 +90,19 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Created From</label>
-              <Input
-                type="date"
+              <DatePicker
                 value={f('dateFrom')}
-                onChange={e => setFilter({ dateFrom: e.target.value })}
+                onChange={v => setFilter({ dateFrom: v })}
+                placeholder="From date…"
               />
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Created To</label>
-              <Input
-                type="date"
+              <DatePicker
                 value={f('dateTo')}
-                onChange={e => setFilter({ dateTo: e.target.value })}
+                onChange={v => setFilter({ dateTo: v })}
+                placeholder="To date…"
               />
             </div>
           </div>
