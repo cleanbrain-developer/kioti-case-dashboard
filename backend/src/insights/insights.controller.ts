@@ -14,4 +14,9 @@ export class InsightsController {
   getDrill(@Query('department') department?: string) {
     return this.insightsService.getDrill(department);
   }
+
+  @Get('aging')
+  getAging() {
+    return this.insightsService.getAging();
+  }
 }

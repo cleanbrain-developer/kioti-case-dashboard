@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/appStore';
 import Header from '@/components/layout/Header';
 import InsightsPage from '@/pages/InsightsPage';
 import CasesPage from '@/pages/CasesPage';
+import AgingPage from '@/pages/AgingPage';
 
 export default function App() {
   const { tab, theme, setTheme } = useAppStore();
@@ -21,7 +22,7 @@ export default function App() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-[104px]">
-        {tab === 'insights' ? <InsightsPage /> : <CasesPage />}
+        {tab === 'insights' ? <InsightsPage /> : tab === 'cases' ? <CasesPage /> : <AgingPage />}
       </main>
     </div>
   );

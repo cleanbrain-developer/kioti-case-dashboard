@@ -50,18 +50,18 @@ export default function Header() {
 
       {/* Nav tabs */}
       <div className="h-10 bg-card border-b border-border flex items-end px-6 gap-1">
-        {(['insights', 'cases'] as const).map(t => (
+        {([['insights', 'Insights'], ['cases', 'Cases'], ['aging', 'Aging']] as const).map(([t, label]) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={[
-              'px-4 py-2 text-sm font-medium capitalize transition-all border-b-2 -mb-px',
+              'px-4 py-2 text-sm font-medium transition-all border-b-2 -mb-px',
               tab === t
                 ? 'border-amber-500 text-foreground'
                 : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
             ].join(' ')}
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {label}
           </button>
         ))}
       </div>
