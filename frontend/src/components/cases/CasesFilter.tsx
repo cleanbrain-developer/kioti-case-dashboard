@@ -28,11 +28,12 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
   const handleClear = () => { resetFilter(); onApply(); };
 
   const activeBadges = [
-    filter.personInCharge && { label: `PIC: ${filter.personInCharge}`,    onRemove: () => { setFilter({ personInCharge: '' }); onApply(); } },
-    filter.department     && { label: `Dept: ${filter.department}`,        onRemove: () => { setFilter({ department: '' });      onApply(); } },
-    filter.status         && { label: `Status: ${filter.status}`,          onRemove: () => { setFilter({ status: '' });          onApply(); } },
-    filter.dateFrom       && { label: `From: ${filter.dateFrom}`,          onRemove: () => { setFilter({ dateFrom: '' });        onApply(); } },
-    filter.dateTo         && { label: `To: ${filter.dateTo}`,              onRemove: () => { setFilter({ dateTo: '' });          onApply(); } },
+    filter.personInCharge && { label: `PIC: ${filter.personInCharge}`,       onRemove: () => { setFilter({ personInCharge: '' }); onApply(); } },
+    filter.department     && { label: `Dept: ${filter.department}`,           onRemove: () => { setFilter({ department: '' });      onApply(); } },
+    filter.moduleLevel    && { label: `Level 1: ${filter.moduleLevel}`,       onRemove: () => { setFilter({ moduleLevel: '' });     onApply(); } },
+    filter.status         && { label: `Status: ${filter.status}`,             onRemove: () => { setFilter({ status: '' });          onApply(); } },
+    filter.dateFrom       && { label: `From: ${filter.dateFrom}`,             onRemove: () => { setFilter({ dateFrom: '' });        onApply(); } },
+    filter.dateTo         && { label: `To: ${filter.dateTo}`,                 onRemove: () => { setFilter({ dateTo: '' });          onApply(); } },
   ].filter(Boolean) as { label: string; onRemove: () => void }[];
 
   return (
