@@ -42,8 +42,8 @@ export class CasesService {
     if (q.moduleLevel)       where.moduleLevel= { contains: q.moduleLevel, mode: 'insensitive' };
     if (q.dateFrom || q.dateTo) {
       where.createdDate = {};
-      if (q.dateFrom) where.createdDate.gte = new Date(q.dateFrom);
-      if (q.dateTo)   where.createdDate.lte = new Date(q.dateTo);
+      if (q.dateFrom) where.createdDate.gte = new Date(`${q.dateFrom}T00:00:00.000Z`);
+      if (q.dateTo)   where.createdDate.lte = new Date(`${q.dateTo}T23:59:59.999Z`);
     }
     return where;
   }
@@ -133,8 +133,8 @@ export class CasesService {
     if (q.department)           cls.push(`${this.sf.fields.department} LIKE '%${esc(q.department)}%'`);
     if (q.personInCharge)       cls.push(`${this.sf.picRelField}.Name LIKE '%${esc(q.personInCharge)}%'`);
     if (q.moduleLevel)          cls.push(`${this.sf.fields.moduleLevel} LIKE '%${esc(q.moduleLevel)}%'`);
-    if (q.dateFrom)             cls.push(`CreatedDate >= ${q.dateFrom}`);
-    if (q.dateTo)               cls.push(`CreatedDate <= ${q.dateTo}`);
+    if (q.dateFrom)             cls.push(`CreatedDate >= ${q.dateFrom}T00:00:00Z`);
+    if (q.dateTo)               cls.push(`CreatedDate <= ${q.dateTo}T23:59:59Z`);
     return { where: cls.length ? 'WHERE ' + cls.join(' AND ') : '' };
   }
 

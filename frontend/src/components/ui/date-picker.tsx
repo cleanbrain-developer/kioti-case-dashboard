@@ -25,17 +25,17 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date' }: Dat
         <Button
           variant="outline"
           className={cn(
-            'h-9 w-full justify-start text-left font-normal px-3 group',
+            'h-9 w-full justify-start text-left font-normal px-2 gap-1.5 min-w-0',
             !selected && 'text-muted-foreground'
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-          <span className="flex-1 truncate">
-            {selected ? format(selected, 'MMM dd, yyyy', { locale: enUS }) : placeholder}
+          <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <span className="flex-1 truncate text-xs">
+            {selected ? format(selected, 'yyyy-MM-dd', { locale: enUS }) : placeholder}
           </span>
           {selected && (
             <X
-              className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50 hover:opacity-100"
+              className="h-3 w-3 shrink-0 opacity-50 hover:opacity-100"
               onClick={e => { e.stopPropagation(); onChange?.(''); }}
             />
           )}
