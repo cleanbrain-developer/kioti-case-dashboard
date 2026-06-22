@@ -27,4 +27,6 @@ export const api = {
   cases   : (f: Partial<CasesFilter>) => get<CasesResponse>('/cases', f as any),
   syncStatus: ()                 => get<SyncStatus>('/sync/status'),
   triggerSync: (password: string) => post<{ message: string }>('/sync', { password }),
+  pingVisitor: ()                  => post<{ count: number }>('/visitors/ping', {}),
+  todayVisitors: ()                => get<{ count: number }>('/visitors/today'),
 };
