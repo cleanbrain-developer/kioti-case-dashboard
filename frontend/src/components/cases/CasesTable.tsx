@@ -1,4 +1,4 @@
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -126,6 +126,14 @@ export default function CasesTable({ data, isLoading, onPageChange }: Props) {
             <Button
               variant="outline" size="sm"
               disabled={page <= 1}
+              onClick={() => { setFilter({ page: 1 }); onPageChange(); }}
+              title="First page"
+            >
+              <ChevronsLeft size={14} />
+            </Button>
+            <Button
+              variant="outline" size="sm"
+              disabled={page <= 1}
               onClick={() => { setFilter({ page: page - 1 }); onPageChange(); }}
             >
               <ChevronLeft size={14} />
@@ -148,6 +156,14 @@ export default function CasesTable({ data, isLoading, onPageChange }: Props) {
               onClick={() => { setFilter({ page: page + 1 }); onPageChange(); }}
             >
               <ChevronRight size={14} />
+            </Button>
+            <Button
+              variant="outline" size="sm"
+              disabled={page >= totalPages}
+              onClick={() => { setFilter({ page: totalPages }); onPageChange(); }}
+              title="Last page"
+            >
+              <ChevronsRight size={14} />
             </Button>
           </div>
         </div>

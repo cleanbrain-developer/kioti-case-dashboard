@@ -56,6 +56,7 @@ export const useAppStore = create<AppState>((set) => ({
     tab: 'cases',
     filter: {
       ...DEFAULT_FILTER,
+      status        : 'Open',
       personInCharge: picName,
       department    : deptName || '',
     },

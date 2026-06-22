@@ -131,7 +131,7 @@ export class CasesService {
     if (q.isClosed === 'false') cls.push(`IsClosed = false`);
     if (q.priority)             cls.push(`Priority = '${esc(q.priority)}'`);
     if (q.department)           cls.push(`${this.sf.fields.department} LIKE '%${esc(q.department)}%'`);
-    if (q.personInCharge)       cls.push(`${this.sf.fields.personInCharge} LIKE '%${esc(q.personInCharge)}%'`);
+    if (q.personInCharge)       cls.push(`${this.sf.picRelField}.Name LIKE '%${esc(q.personInCharge)}%'`);
     if (q.moduleLevel)          cls.push(`${this.sf.fields.moduleLevel} LIKE '%${esc(q.moduleLevel)}%'`);
     if (q.dateFrom)             cls.push(`CreatedDate >= ${q.dateFrom}`);
     if (q.dateTo)               cls.push(`CreatedDate <= ${q.dateTo}`);
