@@ -15,6 +15,7 @@ export interface CasesResponse {
   records: CaseRecord[];
   totalCount: number;
   source: 'db' | 'sf';
+  sfLimitExceeded?: boolean;
 }
 
 export interface KpiData {

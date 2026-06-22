@@ -37,8 +37,12 @@ export default function CasesTable({ data, isLoading, onPageChange }: Props) {
   const instanceUrl = health?.instanceUrl?.replace(/\/$/, '') ?? 'https://login.salesforce.com';
   const { sortField, sortDir, page, pageSize } = filter;
 
-  const totalCount = data?.totalCount ?? 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const totalCount  = data?.totalCount ?? 0;
+  const isSfMode    = data?.source === 'sf';
+  const sfPageLimit = Math.floor(2000 / pageSize); // ~80 pages with pageSize=25
+  const totalPages  = isSfMode
+    ? Math.min(Math.ceil(totalCount / pageSize), sfPageLimit)
+    : Math.ceil(totalCount / pageSize);
 
   const handleSort = (key: string) => {
     if (sortField === key) {
@@ -64,8 +68,15 @@ export default function CasesTable({ data, isLoading, onPageChange }: Props) {
     <div className="space-y-3">
       <div className="flex items-center justify-between text-sm text-muted-foreground px-1">
         <span>Total <strong className="text-foreground">{totalCount.toLocaleString()}</strong> cases</span>
-        {data?.source === 'sf' && <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full">Live from Salesforce</span>}
+        {isSfMode && <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full">Live from Salesforce</span>}
       </div>
+
+      {(data?.sfLimitExceeded || (isSfMode && totalCount > 2000)) && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          <strong>Salesforce pagination limit:</strong> Direct SF queries support up to {sfPageLimit} pages ({(sfPageLimit * pageSize).toLocaleString()} records).
+          Use <strong>Force Sync</strong> (top-right) to load all {totalCount.toLocaleString()} cases into the local DB for full pagination.
+        </div>
+      )}
 
       <div className="border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
