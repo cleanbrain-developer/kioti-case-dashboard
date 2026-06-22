@@ -1,13 +1,11 @@
 services:
 
-  # ── Node.js 앱 ─────────────────────────────────────────────
-  app:
-    build: .
-    image: kioti-case-dashboard:latest
-    container_name: kioti-app
-    ports:
-      - "${PORT:-3000}:${PORT:-3000}"
-    env_file: .env                       # SF 인증정보 주입
+  # ── NestJS Backend ──────────────────────────────────────────
+  backend:
+    build: ./backend
+    image: kioti-backend:latest
+    container_name: kioti-backend
+    env_file: .env
     environment:
       DATABASE_URL: postgresql://kioti:${DB_PASSWORD:-kioti1234}@db:5432/kioti_dashboard
     depends_on:
@@ -17,7 +15,20 @@ services:
     networks:
       - kioti-net
 
-  # ── PostgreSQL 16 ───────────────────────────────────────────
+  # ── React Frontend (nginx) ───────────────────────────────────
+  frontend:
+    build: ./frontend
+    image: kioti-frontend:latest
+    container_name: kioti-frontend
+    ports:
+      - "${PORT:-80}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - kioti-net
+
+  # ── PostgreSQL 16 ────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: kioti-db
