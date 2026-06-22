@@ -28,7 +28,7 @@ export default function PicChart({ data, title, selectedDept }: Props) {
       textStyle: { color: isDark ? '#f1f5f9' : '#0f172a' },
       formatter: (p: any) => `${p[0].name}<br/><b>${p[0].value} open cases</b>`,
     },
-    grid: { left: 120, right: 16, top: 8, bottom: 8 },
+    grid: { left: 120, right: 56, top: 8, bottom: 8 },
     xAxis: {
       type: 'value',
       splitLine: { lineStyle: { color: gridColor } },
