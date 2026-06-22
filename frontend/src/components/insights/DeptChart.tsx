@@ -13,8 +13,14 @@ export default function DeptChart({ data, selected, onSelect }: Props) {
   const theme = useAppStore(s => s.theme);
   const isDark = theme === 'dark';
 
-  const textColor  = isDark ? '#94a3b8' : '#64748b';
-  const gridColor  = isDark ? '#1e293b' : '#f1f5f9';
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+
+  // Sort ascending so largest bar ends up at top in horizontal chart
+  const sorted = [...data].sort((a, b) => a.open - b.open);
+  const labels = sorted.map(d => d.key);
+  const values = sorted.map(d => d.open);
+  const maxVal = Math.max(...values, 1);
 
   const option = {
     backgroundColor: 'transparent',
@@ -24,52 +30,66 @@ export default function DeptChart({ data, selected, onSelect }: Props) {
       backgroundColor: isDark ? '#1e293b' : '#fff',
       borderColor: isDark ? '#334155' : '#e2e8f0',
       textStyle: { color: isDark ? '#f1f5f9' : '#0f172a' },
+      formatter: (params: any[]) => {
+        const p = params[0];
+        return `<strong>${p.name}</strong><br/>Open: <strong>${p.value}</strong>`;
+      },
     },
-    legend: {
-      data: ['Open', 'Closed'],
-      textStyle: { color: textColor },
-      right: 10, top: 0,
-    },
-    grid: { left: 16, right: 16, bottom: 40, top: 36, containLabel: true },
+    grid: { left: 12, right: 60, bottom: 12, top: 12, containLabel: true },
     xAxis: {
-      type: 'category',
-      data: data.map(d => d.key),
-      axisLabel: { color: textColor, fontSize: 11, rotate: data.length > 6 ? 30 : 0, overflow: 'truncate', width: 100 },
-      axisLine: { lineStyle: { color: gridColor } },
-      axisTick: { show: false },
-    },
-    yAxis: {
       type: 'value',
+      max: Math.ceil(maxVal * 1.15),
       splitLine: { lineStyle: { color: gridColor } },
       axisLabel: { color: textColor, fontSize: 11 },
     },
+    yAxis: {
+      type: 'category',
+      data: labels,
+      axisLabel: {
+        color: textColor,
+        fontSize: 11,
+        width: 130,
+        overflow: 'truncate',
+        formatter: (val: string) => val.length > 20 ? val.slice(0, 18) + '…' : val,
+      },
+      axisLine: { lineStyle: { color: gridColor } },
+      axisTick: { show: false },
+    },
     series: [
       {
-        name: 'Open',
         type: 'bar',
-        stack: 'total',
-        data: data.map(d => d.open),
-        itemStyle: { color: '#3b82f6', borderRadius: [0, 0, 0, 0] },
-        emphasis: { focus: 'series' },
-      },
-      {
-        name: 'Closed',
-        type: 'bar',
-        stack: 'total',
-        data: data.map(d => (d.total || d.open) - d.open),
-        itemStyle: { color: isDark ? '#334155' : '#e2e8f0', borderRadius: [4, 4, 0, 0] },
-        emphasis: { focus: 'series' },
+        data: values.map((v, i) => ({
+          value: v,
+          itemStyle: {
+            color: labels[i] === selected
+              ? (isDark ? '#60a5fa' : '#1d4ed8')
+              : (isDark ? '#3b82f6' : '#3b82f6'),
+            borderRadius: [0, 4, 4, 0],
+            opacity: selected && labels[i] !== selected ? 0.45 : 1,
+          },
+        })),
+        barMaxWidth: 28,
+        barMinHeight: 6,
+        label: {
+          show: true,
+          position: 'right',
+          color: textColor,
+          fontSize: 11,
+          formatter: (p: any) => p.value,
+        },
       },
     ],
   };
 
   const onEvents = {
     click: (params: any) => {
-      const dept = data[params.dataIndex]?.key;
+      const dept = labels[params.dataIndex];
       if (!dept) return;
       onSelect(selected === dept ? null : dept);
     },
   };
+
+  const chartHeight = Math.max(260, sorted.length * 36 + 40);
 
   return (
     <Card>
@@ -84,7 +104,11 @@ export default function DeptChart({ data, selected, onSelect }: Props) {
         )}
       </CardHeader>
       <CardContent>
-        <ReactECharts option={option} style={{ height: 280 }} onEvents={onEvents} />
+        <ReactECharts
+          option={option}
+          style={{ height: chartHeight }}
+          onEvents={onEvents}
+        />
         <p className="text-xs text-muted-foreground text-center mt-1">Click a bar to drill down by PIC</p>
       </CardContent>
     </Card>

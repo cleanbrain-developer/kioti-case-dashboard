@@ -20,14 +20,13 @@ const PRIORITY_VARIANT: Record<string, any> = {
 };
 
 const COLUMNS = [
-  { key: 'CaseNumber', label: 'Case #',     sortable: true  },
-  { key: 'Subject',    label: 'Subject',    sortable: true  },
-  { key: 'Status',     label: 'Status',     sortable: true  },
-  { key: 'Priority',   label: 'Priority',   sortable: true  },
-  { key: 'dept',       label: 'Department', sortable: true  },
+  { key: 'CaseNumber', label: 'Case #',          sortable: true },
+  { key: 'Subject',    label: 'Subject',          sortable: true },
+  { key: 'Status',     label: 'Status',           sortable: true },
+  { key: 'Priority',   label: 'Priority',         sortable: true },
+  { key: 'dept',       label: 'Department',       sortable: true },
   { key: 'pic',        label: 'Person In Charge', sortable: true },
-  { key: 'module',     label: 'Module Lv1',sortable: false  },
-  { key: 'CreatedDate',label: 'Created',    sortable: true  },
+  { key: 'CreatedDate',label: 'Created',          sortable: true },
 ];
 
 export default function CasesTable({ data, isLoading, onPageChange }: Props) {
@@ -102,12 +101,11 @@ export default function CasesTable({ data, isLoading, onPageChange }: Props) {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground max-w-[160px] truncate">{r.department || '—'}</td>
                   <td className="px-4 py-3 text-primary whitespace-nowrap">{r._picName || '—'}</td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.moduleLevel || '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">{formatDate(r.CreatedDate)}</td>
                 </tr>
               ))}
               {!isLoading && (data?.records ?? []).length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">No cases found</td></tr>
+                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">No cases found</td></tr>
               )}
             </tbody>
           </table>
