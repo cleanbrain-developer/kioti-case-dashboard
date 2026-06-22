@@ -56,9 +56,11 @@ export class CasesService {
       Status                       : r.status,
       Priority                     : r.priority,
       IsClosed                     : r.isClosed,
+      department                   : r.department,
       [sf.fields.department]       : r.department,
       [sf.fields.personInCharge]   : r.picId,
       _picName                     : r.picName,
+      moduleLevel                  : r.moduleLevel,
       [sf.fields.moduleLevel]      : r.moduleLevel,
       'Account.Name'               : r.accountName,
       CreatedDate                  : r.createdDate,
@@ -112,7 +114,12 @@ export class CasesService {
       this.sf.query(`SELECT ${selectFields} FROM Case ${soqlWhere} ORDER BY ${safeSort} ${safeDir} LIMIT ${pageSize} OFFSET ${offset}`),
       this.sf.query(`SELECT COUNT() FROM Case ${soqlWhere}`),
     ]);
-    const records = casesData.records.map((r: any) => ({ ...r, _picName: r[picRel]?.Name || null }));
+    const records = casesData.records.map((r: any) => ({
+      ...r,
+      _picName   : r[picRel]?.Name || null,
+      department : r[this.sf.fields.department] || null,
+      moduleLevel: r[this.sf.fields.moduleLevel] || null,
+    }));
     return { records, totalCount: countData.totalSize, source: 'sf' };
   }
 
