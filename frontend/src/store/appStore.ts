@@ -17,6 +17,7 @@ interface AppState {
   resetFilter: () => void;
   setInsightsDept: (dept: string | null) => void;
   goToCasesWithPic: (picName: string, deptName?: string) => void;
+  goToCasesWithFilter: (patch: Partial<CasesFilter>) => void;
 }
 
 const DEFAULT_FILTER: CasesFilter = {
@@ -60,5 +61,10 @@ export const useAppStore = create<AppState>((set) => ({
       personInCharge: picName,
       department    : deptName || '',
     },
+  }),
+
+  goToCasesWithFilter: (patch) => set({
+    tab   : 'cases',
+    filter: { ...DEFAULT_FILTER, ...patch },
   }),
 }));

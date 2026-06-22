@@ -3,12 +3,30 @@ import ReactECharts from 'echarts-for-react';
 import { api } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { AgingGroup } from '@/types';
+import type { AgingGroup, CasesFilter } from '@/types';
 
 const BUCKETS  = ['0-30', '31-60', '61-90', '91-180', '181-365', '365+'] as const;
 const B_LABELS = ['0–30d', '31–60d', '61–90d', '91–180d', '181–365d', '365+d'];
 const B_FULL   = ['0–30 days', '31–60 days', '61–90 days', '91–180 days', '181–365 days', '365+ days'];
 const B_COLORS = ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444', '#b91c1c'];
+
+type BucketKey = typeof BUCKETS[number];
+type GroupType = 'department' | 'moduleLevel';
+
+function fmt(d: Date) { return d.toISOString().slice(0, 10); }
+function sub(d: Date, days: number) { return new Date(d.getTime() - days * 86400_000); }
+
+function bucketDateRange(bucket: BucketKey): { dateFrom: string; dateTo: string } {
+  const today = new Date();
+  switch (bucket) {
+    case '0-30'   : return { dateFrom: fmt(sub(today, 30)),  dateTo: fmt(today) };
+    case '31-60'  : return { dateFrom: fmt(sub(today, 60)),  dateTo: fmt(sub(today, 31)) };
+    case '61-90'  : return { dateFrom: fmt(sub(today, 90)),  dateTo: fmt(sub(today, 61)) };
+    case '91-180' : return { dateFrom: fmt(sub(today, 180)), dateTo: fmt(sub(today, 91)) };
+    case '181-365': return { dateFrom: fmt(sub(today, 365)), dateTo: fmt(sub(today, 181)) };
+    case '365+'   : return { dateFrom: '2000-01-01',          dateTo: fmt(sub(today, 366)) };
+  }
+}
 
 function KpiCard({ label, value, sub, color = '' }: { label: string; value: string; sub?: string; color?: string }) {
   return (
@@ -22,8 +40,16 @@ function KpiCard({ label, value, sub, color = '' }: { label: string; value: stri
   );
 }
 
-function AgingGroupChart({ data, title, theme }: { data: AgingGroup[]; title: string; theme: string }) {
-  const isDark   = theme === 'dark';
+interface ChartProps {
+  data    : AgingGroup[];
+  title   : string;
+  theme   : string;
+  groupType: GroupType;
+  onNavigate: (key: string, groupType: GroupType, bucket?: BucketKey) => void;
+}
+
+function AgingGroupChart({ data, title, theme, groupType, onNavigate }: ChartProps) {
+  const isDark    = theme === 'dark';
   const textColor = isDark ? '#94a3b8' : '#64748b';
   const gridColor = isDark ? '#1e293b' : '#f1f5f9';
 
@@ -31,19 +57,20 @@ function AgingGroupChart({ data, title, theme }: { data: AgingGroup[]; title: st
   const labels = sorted.map(d => d.key.length > 26 ? d.key.slice(0, 24) + '…' : d.key);
 
   const series = BUCKETS.map((bucket, i) => ({
-    name      : B_FULL[i],
-    type      : 'bar',
-    stack     : 'total',
-    color     : B_COLORS[i],
-    data      : sorted.map(d => d.buckets[bucket] ?? 0),
+    name       : B_FULL[i],
+    type       : 'bar',
+    stack      : 'total',
+    color      : B_COLORS[i],
+    cursor     : 'pointer',
+    data       : sorted.map(d => d.buckets[bucket] ?? 0),
     barMaxWidth: 20,
-    emphasis  : { focus: 'series' },
+    emphasis   : { focus: 'series' },
     ...(i === BUCKETS.length - 1 ? {
       label: {
-        show    : true,
-        position: 'right',
-        color   : textColor,
-        fontSize: 10,
+        show     : true,
+        position : 'right',
+        color    : textColor,
+        fontSize : 10,
         formatter: (p: any) => sorted[p.dataIndex].total.toLocaleString(),
       },
     } : {}),
@@ -52,8 +79,8 @@ function AgingGroupChart({ data, title, theme }: { data: AgingGroup[]; title: st
   const option = {
     backgroundColor: 'transparent',
     tooltip: {
-      trigger    : 'axis',
-      axisPointer: { type: 'shadow' },
+      trigger        : 'axis',
+      axisPointer    : { type: 'shadow' },
       backgroundColor: isDark ? '#1e293b' : '#fff',
       borderColor    : isDark ? '#334155' : '#e2e8f0',
       textStyle      : { color: isDark ? '#f1f5f9' : '#0f172a', fontSize: 11 },
@@ -63,6 +90,7 @@ function AgingGroupChart({ data, title, theme }: { data: AgingGroup[]; title: st
         const lines = [
           `<strong>${g.key}</strong>`,
           `Total: <strong>${g.total.toLocaleString()}</strong> · Avg: ${g.avgAge}d · Max: ${g.maxAge}d`,
+          '<span style="font-size:10px;color:#94a3b8">Click a segment to view cases</span>',
           '',
         ];
         params.forEach(p => {
@@ -96,20 +124,49 @@ function AgingGroupChart({ data, title, theme }: { data: AgingGroup[]; title: st
     series,
   };
 
+  const onEvents = {
+    click: (params: any) => {
+      const group = sorted[params.dataIndex];
+      if (!group) return;
+      const seriesIdx = B_FULL.indexOf(params.seriesName);
+      const bucket    = seriesIdx >= 0 ? BUCKETS[seriesIdx] : undefined;
+      onNavigate(group.key, groupType, bucket);
+    },
+  };
+
   const chartHeight = Math.max(220, sorted.length * 26 + 56);
 
   return (
     <Card>
       <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
       <CardContent>
-        <ReactECharts option={option} style={{ height: chartHeight }} />
+        <ReactECharts option={option} style={{ height: chartHeight }} onEvents={onEvents} />
+        <p className="text-xs text-muted-foreground text-center mt-1">Click a bar segment to view those cases</p>
       </CardContent>
     </Card>
   );
 }
 
-function AgingTable({ data, title }: { data: AgingGroup[]; title: string }) {
+interface TableProps {
+  data      : AgingGroup[];
+  title     : string;
+  groupType : GroupType;
+  onNavigate: (key: string, groupType: GroupType, bucket?: BucketKey) => void;
+}
+
+function AgingTable({ data, title, groupType, onNavigate }: TableProps) {
   const sorted = [...data].sort((a, b) => b.total - a.total);
+
+  const CellLink = ({ value, onClick }: { value: number; onClick: () => void }) =>
+    value > 0 ? (
+      <button
+        onClick={onClick}
+        className="tabular-nums text-muted-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
+      >
+        {value.toLocaleString()}
+      </button>
+    ) : <span className="text-muted-foreground/40">—</span>;
+
   return (
     <Card>
       <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
@@ -134,15 +191,22 @@ function AgingTable({ data, title }: { data: AgingGroup[]; title: string }) {
               {sorted.map(row => (
                 <tr key={row.key} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
                   <td className="px-3 py-1.5 font-medium max-w-[200px] truncate" title={row.key}>{row.key}</td>
-                  {BUCKETS.map(b => {
-                    const v = row.buckets[b] ?? 0;
-                    return (
-                      <td key={b} className="text-right px-2 py-1.5 tabular-nums text-muted-foreground">
-                        {v > 0 ? v.toLocaleString() : '—'}
-                      </td>
-                    );
-                  })}
-                  <td className="text-right px-3 py-1.5 font-bold tabular-nums">{row.total.toLocaleString()}</td>
+                  {BUCKETS.map(b => (
+                    <td key={b} className="text-right px-2 py-1.5">
+                      <CellLink
+                        value={row.buckets[b] ?? 0}
+                        onClick={() => onNavigate(row.key, groupType, b)}
+                      />
+                    </td>
+                  ))}
+                  <td className="text-right px-3 py-1.5">
+                    <button
+                      onClick={() => onNavigate(row.key, groupType)}
+                      className="font-bold tabular-nums hover:text-primary hover:underline cursor-pointer transition-colors"
+                    >
+                      {row.total.toLocaleString()}
+                    </button>
+                  </td>
                   <td className="text-right px-3 py-1.5 tabular-nums text-muted-foreground">{row.avgAge}d</td>
                   <td className="text-right px-3 py-1.5 tabular-nums text-muted-foreground">{row.maxAge}d</td>
                 </tr>
@@ -156,12 +220,26 @@ function AgingTable({ data, title }: { data: AgingGroup[]; title: string }) {
 }
 
 export default function AgingPage() {
-  const theme = useAppStore(s => s.theme);
+  const theme              = useAppStore(s => s.theme);
+  const goToCasesWithFilter = useAppStore(s => s.goToCasesWithFilter);
+
   const { data, isLoading, error } = useQuery({
     queryKey : ['aging'],
     queryFn  : api.aging,
     staleTime: 5 * 60_000,
   });
+
+  const handleNavigate = (key: string, groupType: GroupType, bucket?: BucketKey) => {
+    const patch: Partial<CasesFilter> = { status: 'Open' };
+    if (groupType === 'department') patch.department  = key;
+    else                            patch.moduleLevel = key;
+    if (bucket) {
+      const { dateFrom, dateTo } = bucketDateRange(bucket);
+      patch.dateFrom = dateFrom;
+      patch.dateTo   = dateTo;
+    }
+    goToCasesWithFilter(patch);
+  };
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">
@@ -173,24 +251,24 @@ export default function AgingPage() {
     <div className="p-6 text-center text-muted-foreground">Failed to load aging data.</div>
   );
 
-  const under30   = data.buckets.find(b => b.bucket === '0-30')?.total ?? 0;
-  const over365   = data.buckets.find(b => b.bucket === '365+')?.total ?? 0;
-  const over181   = (data.buckets.find(b => b.bucket === '181-365')?.total ?? 0) + over365;
-  const snapshot  = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const under30  = data.buckets.find(b => b.bucket === '0-30')?.total ?? 0;
+  const over365  = data.buckets.find(b => b.bucket === '365+')?.total ?? 0;
+  const over181  = (data.buckets.find(b => b.bucket === '181-365')?.total ?? 0) + over365;
+  const snapshot = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
       <div>
         <h2 className="text-lg font-semibold">Case Aging Analysis</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Age measured from case open date to {snapshot} snapshot · Open cases only
+          Age measured from case open date to {snapshot} snapshot · Open cases only · Click any number to view cases
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
         <KpiCard label="Total Open Cases"  value={data.totalOpen.toLocaleString()} />
-        <KpiCard label="Average Age"       value={`${data.avgAge} days`}  sub="mean days open" />
+        <KpiCard label="Average Age"       value={`${data.avgAge} days`} sub="mean days open" />
         <KpiCard
           label="Oldest Open Case"
           value={`${data.maxAge} days`}
@@ -220,15 +298,19 @@ export default function AgingPage() {
               const total = data.buckets.find(x => x.bucket === b)?.total ?? 0;
               const pct   = data.totalOpen > 0 ? Math.round(total / data.totalOpen * 100) : 0;
               return (
-                <div
+                <button
                   key={b}
-                  className="text-center p-3 rounded-lg border-l-[3px]"
+                  onClick={() => {
+                    const { dateFrom, dateTo } = bucketDateRange(b);
+                    goToCasesWithFilter({ status: 'Open', dateFrom, dateTo });
+                  }}
+                  className="text-center p-3 rounded-lg border-l-[3px] transition-opacity hover:opacity-80 cursor-pointer"
                   style={{ backgroundColor: B_COLORS[i] + '18', borderColor: B_COLORS[i] }}
                 >
                   <div className="text-xs text-muted-foreground mb-1">{b} days</div>
                   <div className="text-xl font-bold tabular-nums">{total.toLocaleString()}</div>
                   <div className="text-xs font-medium mt-0.5" style={{ color: B_COLORS[i] }}>{pct}%</div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -237,14 +319,26 @@ export default function AgingPage() {
 
       {/* Stacked Bar Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <AgingGroupChart data={data.byDepartment}  title="Aging by Department"       theme={theme} />
-        <AgingGroupChart data={data.byModuleLevel} title="Aging by Level 1 Ticket Type" theme={theme} />
+        <AgingGroupChart
+          data={data.byDepartment}
+          title="Aging by Department"
+          theme={theme}
+          groupType="department"
+          onNavigate={handleNavigate}
+        />
+        <AgingGroupChart
+          data={data.byModuleLevel}
+          title="Aging by Level 1 Ticket Type"
+          theme={theme}
+          groupType="moduleLevel"
+          onNavigate={handleNavigate}
+        />
       </div>
 
       {/* Detail Tables */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <AgingTable data={data.byDepartment}  title="Department Detail" />
-        <AgingTable data={data.byModuleLevel} title="Level 1 Ticket Type Detail" />
+        <AgingTable data={data.byDepartment}  title="Department Detail"          groupType="department"   onNavigate={handleNavigate} />
+        <AgingTable data={data.byModuleLevel} title="Level 1 Ticket Type Detail" groupType="moduleLevel"  onNavigate={handleNavigate} />
       </div>
     </div>
   );
