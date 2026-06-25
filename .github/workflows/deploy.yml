@@ -57,10 +57,4 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
-          script: |
-            set -e
-            cd ${{ secrets.SERVER_PATH }}
-            git pull origin main
-            docker compose up -d --build --remove-orphans
-            docker image prune -f
-            echo "Deployed $(git rev-parse --short HEAD) at $(date -u '+%Y-%m-%d %H:%M UTC')"
+          script: bash ${{ secrets.SERVER_PATH }}/scripts/deploy.sh ${{ secrets.SERVER_PATH }}
