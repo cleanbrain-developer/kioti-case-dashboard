@@ -1,4 +1,4 @@
-name: kioti
+name: kioti-case-dashboard
 
 services:
 
@@ -55,7 +55,9 @@ services:
 volumes:
   postgres_data:
     name: kioti_postgres_data
+    external: true   # pre-exists from prior deployment; managed outside Compose
 
 networks:
   kioti-net:
     name: kioti-network
+    external: true   # pre-exists from prior deployment; managed outside Compose
