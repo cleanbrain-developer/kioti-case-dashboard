@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_DIR="${1:-/opt/kioti}"
+PROJECT_DIR="${1:-/opt/kioti-case-dashboard}"
 
 echo "▶ Deploying Kioti Case Dashboard"
 echo "  Path : $PROJECT_DIR"
