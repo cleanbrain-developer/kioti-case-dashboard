@@ -57,4 +57,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
-          script: bash ${{ secrets.SERVER_PATH }}/scripts/deploy.sh ${{ secrets.SERVER_PATH }}
+          script: |
+            set -e
+            cd ${{ secrets.SERVER_PATH }}
+            git pull origin main
+            bash scripts/deploy.sh ${{ secrets.SERVER_PATH }}
