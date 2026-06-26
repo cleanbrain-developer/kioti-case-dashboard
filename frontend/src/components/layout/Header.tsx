@@ -10,11 +10,13 @@ export default function Header() {
   const [visitorCount, setVisitorCount] = useState<number | null>(null);
 
   useEffect(() => {
+    // Use client's local date (YYYY-MM-DD) so the counter resets at local midnight, not UTC midnight
+    const localDate = new Date().toLocaleDateString('en-CA');
     if (sessionStorage.getItem('pinged')) {
-      api.todayVisitors().then(d => setVisitorCount(d.count)).catch(() => {});
+      api.todayVisitors(localDate).then(d => setVisitorCount(d.count)).catch(() => {});
     } else {
       sessionStorage.setItem('pinged', '1');
-      api.pingVisitor().then(d => setVisitorCount(d.count)).catch(() => {});
+      api.pingVisitor(localDate).then(d => setVisitorCount(d.count)).catch(() => {});
     }
   }, []);
 
