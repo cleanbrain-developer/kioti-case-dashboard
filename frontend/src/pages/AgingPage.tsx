@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import { api } from '@/lib/api';
@@ -53,7 +52,6 @@ function AgingGroupChart({ data, title, theme, groupType, onNavigate }: ChartPro
   const isDark    = theme === 'dark';
   const textColor = isDark ? '#94a3b8' : '#64748b';
   const gridColor = isDark ? '#1e293b' : '#f1f5f9';
-  const chartRef  = useRef<any>(null);
 
   const sorted = [...data].sort((a, b) => a.total - b.total);
   const labels = sorted.map(d => d.key.length > 26 ? d.key.slice(0, 24) + '…' : d.key);
@@ -67,6 +65,7 @@ function AgingGroupChart({ data, title, theme, groupType, onNavigate }: ChartPro
     data       : sorted.map(d => d.buckets[bucket] ?? 0),
     barMaxWidth: 20,
     emphasis   : { focus: 'self' },
+    blur       : { itemStyle: { opacity: 0.15 } },
     ...(i === BUCKETS.length - 1 ? {
       label: {
         show     : true,
@@ -126,21 +125,18 @@ function AgingGroupChart({ data, title, theme, groupType, onNavigate }: ChartPro
     series,
   };
 
-  const highlightRow = (dataIndex: number) => {
-    const inst = chartRef.current?.getEchartsInstance();
-    if (!inst) return;
-    inst.dispatchAction({ type: 'highlight', seriesIndex: BUCKETS.map((_, i) => i), dataIndex });
-  };
-
-  const downplayAll = () => {
-    chartRef.current?.getEchartsInstance()?.dispatchAction({ type: 'downplay' });
-  };
-
   const onEvents = {
-    mouseover: (params: any) => {
-      if (params.dataIndex !== undefined) highlightRow(params.dataIndex);
+    mouseover: (params: any, inst: any) => {
+      if (params.dataIndex === undefined) return;
+      inst?.dispatchAction({
+        type       : 'highlight',
+        seriesIndex: BUCKETS.map((_, i) => i),
+        dataIndex  : params.dataIndex,
+      });
     },
-    globalout: downplayAll,
+    globalout: (_: any, inst: any) => {
+      inst?.dispatchAction({ type: 'downplay' });
+    },
     click: (params: any) => {
       const group = sorted[params.dataIndex];
       if (!group) return;
@@ -156,7 +152,7 @@ function AgingGroupChart({ data, title, theme, groupType, onNavigate }: ChartPro
     <Card>
       <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
       <CardContent>
-        <ReactECharts ref={chartRef} option={option} style={{ height: chartHeight }} onEvents={onEvents} />
+        <ReactECharts option={option} style={{ height: chartHeight }} onEvents={onEvents} />
         <p className="text-xs text-muted-foreground text-center mt-1">Click a bar segment to view those cases</p>
       </CardContent>
     </Card>
