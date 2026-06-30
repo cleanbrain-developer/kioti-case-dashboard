@@ -64,7 +64,7 @@ export class SyncService {
       const soql   = [
         'SELECT Id, CaseNumber, Subject, Status, Priority, IsClosed,',
         `${f.department}, ${f.personInCharge}, ${picRel}.Name,`,
-        `${f.moduleLevel}, Account.Name, CreatedDate`,
+        `${f.moduleLevel}, Account.Name, Owner.Id, Owner.Name, CreatedDate`,
         'FROM Case ORDER BY CreatedDate DESC',
       ].join(' ');
 
@@ -134,6 +134,8 @@ export class SyncService {
       picName    : r[picRel]?.Name     || null,
       moduleLevel: r[f.moduleLevel]    || null,
       accountName: r.Account?.Name || r['Account.Name'] || null,
+      ownerId    : r.Owner?.Id   || null,
+      ownerName  : r.Owner?.Name || null,
       createdDate: r.CreatedDate ? new Date(r.CreatedDate) : null,
       isClosed   : r.IsClosed === true,
       syncedAt   : new Date(),

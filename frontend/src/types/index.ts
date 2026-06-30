@@ -6,6 +6,8 @@ export interface CaseRecord {
   Priority: string | null;
   IsClosed: boolean;
   _picName: string | null;
+  ownerId: string | null;
+  ownerName: string | null;
   'Account.Name': string | null;
   CreatedDate: string | null;
   [key: string]: any;
