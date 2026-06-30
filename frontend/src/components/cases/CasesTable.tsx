@@ -22,13 +22,14 @@ const PRIORITY_VARIANT: Record<string, any> = {
 };
 
 const COLUMNS = [
-  { key: 'CaseNumber', label: 'Case #',          sortable: true },
-  { key: 'Subject',    label: 'Subject',          sortable: true },
-  { key: 'Status',     label: 'Status',           sortable: true },
-  { key: 'Priority',   label: 'Priority',         sortable: true },
-  { key: 'dept',       label: 'Department',       sortable: true },
-  { key: 'pic',        label: 'Person In Charge', sortable: true },
-  { key: 'CreatedDate',label: 'Created',          sortable: true },
+  { key: 'CaseNumber', label: 'Case #',          sortable: true  },
+  { key: 'owner',      label: 'Owner',            sortable: true  },
+  { key: 'Subject',    label: 'Subject',          sortable: true  },
+  { key: 'Status',     label: 'Status',           sortable: true  },
+  { key: 'Priority',   label: 'Priority',         sortable: true  },
+  { key: 'dept',       label: 'Department',       sortable: true  },
+  { key: 'pic',        label: 'Person In Charge', sortable: true  },
+  { key: 'CreatedDate',label: 'Created',          sortable: true  },
 ];
 
 export default function CasesTable({ data, isLoading, onPageChange }: Props) {
@@ -95,6 +96,18 @@ export default function CasesTable({ data, isLoading, onPageChange }: Props) {
                       {r.CaseNumber}
                     </a>
                   </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {r.ownerId && r.ownerName ? (
+                      <a
+                        href={`${instanceUrl}/${r.ownerId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline text-sm"
+                      >
+                        {r.ownerName}
+                      </a>
+                    ) : <span className="text-muted-foreground">—</span>}
+                  </td>
                   <td className="px-4 py-3 max-w-xs truncate text-foreground">{r.Subject || '—'}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {r.Status ? <Badge variant={STATUS_VARIANT[r.Status] ?? 'outline'}>{r.Status}</Badge> : '—'}
@@ -108,7 +121,7 @@ export default function CasesTable({ data, isLoading, onPageChange }: Props) {
                 </tr>
               ))}
               {!isLoading && (data?.records ?? []).length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">No cases found</td></tr>
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">No cases found</td></tr>
               )}
             </tbody>
           </table>

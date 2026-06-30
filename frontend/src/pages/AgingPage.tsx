@@ -64,7 +64,8 @@ function AgingGroupChart({ data, title, theme, groupType, onNavigate }: ChartPro
     cursor     : 'pointer',
     data       : sorted.map(d => d.buckets[bucket] ?? 0),
     barMaxWidth: 20,
-    emphasis   : { focus: 'series' },
+    emphasis   : { focus: 'self' },
+    blur       : { itemStyle: { opacity: 0.15 } },
     ...(i === BUCKETS.length - 1 ? {
       label: {
         show     : true,
@@ -125,6 +126,17 @@ function AgingGroupChart({ data, title, theme, groupType, onNavigate }: ChartPro
   };
 
   const onEvents = {
+    mouseover: (params: any, inst: any) => {
+      if (params.dataIndex === undefined) return;
+      inst?.dispatchAction({
+        type       : 'highlight',
+        seriesIndex: BUCKETS.map((_, i) => i),
+        dataIndex  : params.dataIndex,
+      });
+    },
+    globalout: (_: any, inst: any) => {
+      inst?.dispatchAction({ type: 'downplay' });
+    },
     click: (params: any) => {
       const group = sorted[params.dataIndex];
       if (!group) return;

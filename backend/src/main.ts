@@ -8,10 +8,22 @@ async function bootstrap() {
   app.enableCors({ origin: '*' });
 
   const prisma = app.get(PrismaService);
+  // Add owner columns if not yet present (idempotent)
+  await prisma.$executeRawUnsafe(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS owner_id   TEXT`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS owner_name TEXT`);
+
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS daily_visits (
       date DATE PRIMARY KEY,
       count INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS visit_sessions (
+      date       DATE NOT NULL,
+      session_id TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (date, session_id)
     )
   `);
   const port = process.env.PORT || 3000;

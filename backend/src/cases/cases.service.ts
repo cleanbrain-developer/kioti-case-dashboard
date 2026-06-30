@@ -10,6 +10,7 @@ const DB_SORT_MAP: Record<string, string> = {
   Priority      : 'priority',
   dept          : 'department',
   pic           : 'picName',
+  owner         : 'ownerName',
   module        : 'moduleLevel',
   'Account.Name': 'accountName',
   CreatedDate   : 'createdDate',
@@ -51,6 +52,8 @@ export class CasesService {
       IsClosed     : r.isClosed,
       department   : r.department,
       _picName     : r.picName,
+      ownerId      : r.ownerId,
+      ownerName    : r.ownerName,
       'Account.Name': r.accountName,
       CreatedDate  : r.createdDate,
     };

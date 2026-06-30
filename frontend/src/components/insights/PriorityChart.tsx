@@ -32,7 +32,20 @@ export default function PriorityChart({ data }: Props) {
         value: d.total,
         itemStyle: { color: COLORS[d.Priority] || '#94a3b8', borderRadius: 4 },
       })),
-      label: { show: false },
+      label: {
+        show: true,
+        formatter: '{c} ({d}%)',
+        fontSize: 11,
+        fontWeight: '500',
+        color: isDark ? '#cbd5e1' : '#475569',
+      },
+      labelLine: {
+        show: true,
+        smooth: 0.2,
+        length: 6,
+        length2: 10,
+        lineStyle: { width: 1, color: isDark ? '#475569' : '#cbd5e1' },
+      },
       emphasis: { itemStyle: { shadowBlur: 8, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.3)' } },
     }],
   };

@@ -18,6 +18,8 @@ model Case {
   picName     String?   @map("pic_name")
   moduleLevel String?   @map("module_level")
   accountName String?   @map("account_name")
+  ownerId     String?   @map("owner_id")
+  ownerName   String?   @map("owner_name")
   createdDate DateTime? @map("created_date")
   isClosed    Boolean   @default(false) @map("is_closed")
   syncedAt    DateTime  @default(now()) @map("synced_at")

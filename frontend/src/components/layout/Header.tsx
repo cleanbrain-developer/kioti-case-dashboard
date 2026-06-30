@@ -10,11 +10,20 @@ export default function Header() {
   const [visitorCount, setVisitorCount] = useState<number | null>(null);
 
   useEffect(() => {
-    if (sessionStorage.getItem('pinged')) {
-      api.todayVisitors().then(d => setVisitorCount(d.count)).catch(() => {});
+    // Local date in YYYY-MM-DD so count resets at local midnight, not UTC midnight
+    const localDate = new Date().toLocaleDateString('en-CA');
+
+    // Retrieve or generate a UUID session ID (persists for this browser tab's lifetime)
+    let sessionId = sessionStorage.getItem('visitSessionId');
+    if (!sessionId) {
+      try { sessionId = crypto.randomUUID(); }
+      catch { sessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
+      sessionStorage.setItem('visitSessionId', sessionId);
+      // New session: ping to register this visit
+      api.pingVisitor(localDate, sessionId).then(d => setVisitorCount(d.count)).catch(() => {});
     } else {
-      sessionStorage.setItem('pinged', '1');
-      api.pingVisitor().then(d => setVisitorCount(d.count)).catch(() => {});
+      // Existing session (e.g. page refresh): just read the current count, no extra ping
+      api.todayVisitors(localDate).then(d => setVisitorCount(d.count)).catch(() => {});
     }
   }, []);
 
