@@ -6,8 +6,8 @@ export class VisitorsController {
   constructor(private readonly visitorsService: VisitorsService) {}
 
   @Post('ping')
-  ping(@Body() body: { date?: string }) {
-    return this.visitorsService.ping(body?.date);
+  ping(@Body() body: { date?: string; sessionId?: string }) {
+    return this.visitorsService.ping(body?.date, body?.sessionId);
   }
 
   @Get('today')

@@ -28,6 +28,6 @@ export const api = {
   syncStatus: ()                 => get<SyncStatus>('/sync/status'),
   triggerSync: (password: string) => post<{ message: string }>('/sync', { password }),
   aging        : ()                => get<AgingResponse>('/insights/aging'),
-  pingVisitor  : (date: string)    => post<{ count: number }>('/visitors/ping', { date }),
-  todayVisitors: (date: string)    => get<{ count: number }>('/visitors/today', { date }),
+  pingVisitor  : (date: string, sessionId: string) => post<{ count: number }>('/visitors/ping', { date, sessionId }),
+  todayVisitors: (date: string)                    => get<{ count: number }>('/visitors/today', { date }),
 };

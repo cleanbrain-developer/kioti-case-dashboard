@@ -14,6 +14,14 @@ async function bootstrap() {
       count INTEGER NOT NULL DEFAULT 0
     )
   `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS visit_sessions (
+      date       DATE NOT NULL,
+      session_id TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (date, session_id)
+    )
+  `);
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`\n⚙  Kioti Backend (NestJS)`);
