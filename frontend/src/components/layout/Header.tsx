@@ -1,4 +1,4 @@
-import { Moon, Sun, Users, RefreshCw } from 'lucide-react';
+import { Moon, Sun, Users, RefreshCw, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/appStore';
@@ -80,6 +80,14 @@ export default function Header() {
         >
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
+      </div>
+
+      {/* Confidential notice */}
+      <div className="h-6 bg-amber-500/10 border-y border-amber-500/20 flex items-center justify-center gap-1.5 px-4">
+        <Lock size={9} className="text-amber-500/60 flex-shrink-0" />
+        <span className="text-[10px] text-amber-700/70 dark:text-amber-400/60 tracking-wide">
+          This is meant for internal employees only as this is confidential information.
+        </span>
       </div>
 
       {/* Nav tabs */}

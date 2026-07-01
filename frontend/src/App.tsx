@@ -47,7 +47,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-[104px]">
+      <main className="pt-[128px]">
         {tab === 'insights' ? <InsightsPage />
           : tab === 'cases'    ? <CasesPage />
           : tab === 'aging'    ? <AgingPage />
