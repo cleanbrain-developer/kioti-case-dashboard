@@ -313,7 +313,7 @@ export default function AgingPage() {
                   style={{ backgroundColor: B_COLORS[i] + '18', borderColor: B_COLORS[i] }}
                 >
                   <div className="text-xs text-muted-foreground mb-1">{b} days</div>
-                  <div className="text-xl font-bold tabular-nums">{total.toLocaleString()}</div>
+                  <div className="text-xl font-bold tabular-nums" style={{ color: B_COLORS[i] }}>{total.toLocaleString()}</div>
                   <div className="text-xs font-medium mt-0.5" style={{ color: B_COLORS[i] }}>{pct}%</div>
                 </button>
               );
