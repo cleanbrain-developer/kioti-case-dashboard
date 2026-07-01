@@ -22,7 +22,8 @@ docker volume inspect kioti_postgres_data >/dev/null 2>&1 \
 
 echo ""
 echo "[3/5] Removing any containers conflicting with compose names (project migration)"
-for ctr in kioti-db kioti-backend kioti-frontend kioti-smtp; do
+for ctr in kioti-db kioti-backend kioti-frontend kioti-smtp \
+           kioti-case-dashboard-db kioti-case-dashboard-backend kioti-case-dashboard-frontend kioti-case-dashboard-smtp; do
   if docker inspect "$ctr" >/dev/null 2>&1; then
     echo "  Removing existing container: $ctr"
     docker rm -f "$ctr"
