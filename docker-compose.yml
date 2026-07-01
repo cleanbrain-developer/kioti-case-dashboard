@@ -13,6 +13,7 @@ services:
       RELAYHOST: ${SMTP_RELAYHOST:-}
       RELAYHOST_USERNAME: ${SMTP_RELAYHOST_USER:-}
       RELAYHOST_PASSWORD: ${SMTP_RELAYHOST_PASS:-}
+      POSTFIX_inet_protocols: ipv4
     networks:
       - kioti-net
 
