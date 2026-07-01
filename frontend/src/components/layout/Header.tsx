@@ -1,5 +1,5 @@
-import { Moon, Sun, Users, RefreshCw, AlertCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Moon, Sun, Users, Calendar, AlertCircle, BarChart2, List, Clock, Mail } from 'lucide-react';
+import { useEffect, useState, type ElementType } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/appStore';
 import { Button } from '@/components/ui/button';
@@ -74,9 +74,9 @@ export default function Header() {
         )}
 
         {lastSyncAt && (
-          <div className="hidden sm:flex items-center gap-1 text-slate-400 text-xs">
-            <RefreshCw size={11} />
-            <span>Synced <span className="text-slate-300">{fmtSyncTime(lastSyncAt)}</span></span>
+          <div className="hidden sm:flex items-center gap-1.5 text-slate-400 text-xs">
+            <Calendar size={11} />
+            <span>Last sync: <span className="text-slate-200">{fmtSyncTime(lastSyncAt)}</span></span>
           </div>
         )}
 
@@ -90,19 +90,25 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Nav tabs */}
-      <div className="h-10 bg-card border-b border-border flex items-end px-6 gap-1">
-        {([['insights', 'Insights'], ['cases', 'Cases'], ['aging', 'Aging'], ['reports', 'Reports']] as const).map(([t, label]) => (
+      {/* Nav tabs — unified dark header */}
+      <div className="bg-slate-900 border-b border-slate-700/60 flex items-end px-6 gap-0.5">
+        {([
+          { key: 'insights', label: 'Insights', Icon: BarChart2 },
+          { key: 'cases',    label: 'Cases',    Icon: List      },
+          { key: 'aging',    label: 'Aging',    Icon: Clock     },
+          { key: 'reports',  label: 'Reports',  Icon: Mail      },
+        ] as { key: 'insights' | 'cases' | 'aging' | 'reports'; label: string; Icon: ElementType }[]).map(({ key, label, Icon }) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={key}
+            onClick={() => setTab(key)}
             className={[
-              'px-4 py-2 text-sm font-medium transition-all border-b-2 -mb-px',
-              tab === t
-                ? 'border-amber-500 text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
+              'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px',
+              tab === key
+                ? 'border-amber-500 text-white'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600',
             ].join(' ')}
           >
+            <Icon size={13} />
             {label}
           </button>
         ))}
