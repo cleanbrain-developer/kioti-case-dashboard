@@ -2,6 +2,20 @@ name: kioti-case-dashboard
 
 services:
 
+  # ── Postfix SMTP relay (내부 메일 발송용) ────────────────────
+  smtp:
+    image: boky/postfix
+    container_name: kioti-smtp
+    restart: unless-stopped
+    environment:
+      HOSTNAME: mail.kiotitractor.com
+      ALLOWED_SENDER_DOMAINS: kiotitractor.com
+      RELAYHOST: ${SMTP_RELAYHOST:-}
+      RELAYHOST_USERNAME: ${SMTP_RELAYHOST_USER:-}
+      RELAYHOST_PASSWORD: ${SMTP_RELAYHOST_PASS:-}
+    networks:
+      - kioti-net
+
   # ── NestJS Backend ──────────────────────────────────────────
   backend:
     build: ./backend
@@ -10,9 +24,14 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://kioti:${DB_PASSWORD:-kioti1234}@db:5432/kioti_dashboard
+      SMTP_HOST: kioti-smtp
+      SMTP_PORT: "25"
+      SMTP_SECURE: "false"
     depends_on:
       db:
         condition: service_healthy
+      smtp:
+        condition: service_started
     restart: unless-stopped
     networks:
       - kioti-net

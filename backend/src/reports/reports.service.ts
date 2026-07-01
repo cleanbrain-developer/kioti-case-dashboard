@@ -305,9 +305,12 @@ export class ReportsService {
   private async sendEmail(to: string[], subject: string, html: string) {
     const transport = nodemailer.createTransport({
       host  : process.env.SMTP_HOST,
-      port  : parseInt(process.env.SMTP_PORT ?? '587', 10),
+      port  : parseInt(process.env.SMTP_PORT ?? '25', 10),
       secure: process.env.SMTP_SECURE === 'true',
-      auth  : { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      // auth is optional — omit when using internal relay (kioti-smtp container)
+      ...(process.env.SMTP_USER
+        ? { auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }
+        : {}),
     });
     await transport.sendMail({
       from   : `"KIOTI Case Dashboard" <no-reply@kiotitractor.com>`,
@@ -318,7 +321,8 @@ export class ReportsService {
   }
 
   private isSmtpConfigured(): boolean {
-    return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+    // Only SMTP_HOST is required; internal relay (kioti-smtp) needs no credentials
+    return !!process.env.SMTP_HOST;
   }
 
   private assertSmtpConfigured() {
