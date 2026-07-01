@@ -1,4 +1,4 @@
-import { Moon, Sun, Users, RefreshCw, Lock } from 'lucide-react';
+import { Moon, Sun, Users, RefreshCw, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/appStore';
@@ -47,6 +47,14 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
+      {/* Confidential notice — very top */}
+      <div className="h-6 bg-amber-900 flex items-center justify-center gap-1.5 px-4">
+        <AlertCircle size={11} className="text-amber-400 flex-shrink-0" />
+        <span className="text-[11px] text-amber-200 tracking-wide">
+          For internal employees only — this dashboard contains confidential information.
+        </span>
+      </div>
+
       {/* Top bar */}
       <div className="h-14 bg-gradient-to-r from-slate-800 to-slate-900 flex items-center px-6 gap-4 shadow-lg">
         <div className="flex items-center gap-3">
@@ -80,14 +88,6 @@ export default function Header() {
         >
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
-      </div>
-
-      {/* Confidential notice */}
-      <div className="h-6 bg-amber-500/10 border-y border-amber-500/20 flex items-center justify-center gap-1.5 px-4">
-        <Lock size={9} className="text-amber-500/60 flex-shrink-0" />
-        <span className="text-[10px] text-amber-700/70 dark:text-amber-400/60 tracking-wide">
-          This is meant for internal employees only as this is confidential information.
-        </span>
       </div>
 
       {/* Nav tabs */}
