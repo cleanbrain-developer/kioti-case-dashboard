@@ -59,7 +59,7 @@ export default function Header() {
 
       {/* Nav tabs */}
       <div className="h-10 bg-card border-b border-border flex items-end px-6 gap-1">
-        {([['insights', 'Insights'], ['cases', 'Cases'], ['aging', 'Aging']] as const).map(([t, label]) => (
+        {([['insights', 'Insights'], ['cases', 'Cases'], ['aging', 'Aging'], ['reports', 'Reports']] as const).map(([t, label]) => (
           <button
             key={t}
             onClick={() => setTab(t)}
