@@ -303,10 +303,14 @@ export class ReportsService {
   }
 
   private async sendEmail(to: string[], subject: string, html: string) {
+    const port = parseInt(process.env.SMTP_PORT ?? '25', 10);
     const transport = nodemailer.createTransport({
-      host  : process.env.SMTP_HOST,
-      port  : parseInt(process.env.SMTP_PORT ?? '25', 10),
-      secure: process.env.SMTP_SECURE === 'true',
+      host     : process.env.SMTP_HOST,
+      port,
+      secure   : process.env.SMTP_SECURE === 'true',
+      // Internal Docker relay (port 25): skip STARTTLS and cert validation
+      ignoreTLS: port === 25,
+      tls      : { rejectUnauthorized: false },
       // auth is optional — omit when using internal relay (kioti-smtp container)
       ...(process.env.SMTP_USER
         ? { auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }
