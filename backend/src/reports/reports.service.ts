@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { buildReportEmail, type DeptSection } from './email.template';
@@ -323,7 +323,10 @@ export class ReportsService {
 
   private assertSmtpConfigured() {
     if (!this.isSmtpConfigured()) {
-      throw new Error('SMTP is not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS in .env');
+      throw new HttpException(
+        'SMTP is not configured. Add SMTP_HOST, SMTP_USER, SMTP_PASS to the server .env file.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }

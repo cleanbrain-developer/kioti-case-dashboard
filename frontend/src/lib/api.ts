@@ -2,11 +2,18 @@ import type { CasesFilter, CasesResponse, InsightsResponse, DrillResponse, SyncS
 
 const BASE = '/api';
 
+async function extractError(res: Response): Promise<never> {
+  const text = await res.text();
+  let msg = text;
+  try { msg = JSON.parse(text).message || text; } catch { /* not JSON */ }
+  throw new Error(msg);
+}
+
 async function get<T>(path: string, params?: Record<string, string | number | boolean>): Promise<T> {
   const url = new URL(`${BASE}${path}`, window.location.origin);
   if (params) Object.entries(params).forEach(([k, v]) => { if (v !== '' && v !== undefined) url.searchParams.set(k, String(v)); });
   const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  if (!res.ok) await extractError(res);
   return res.json();
 }
 
@@ -16,7 +23,7 @@ async function post<T>(path: string, body: object): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  if (!res.ok) await extractError(res);
   return res.json();
 }
 
@@ -26,13 +33,13 @@ async function put<T>(path: string, body: object): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  if (!res.ok) await extractError(res);
   return res.json();
 }
 
 async function del<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  if (!res.ok) await extractError(res);
   return res.json();
 }
 
