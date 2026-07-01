@@ -1,13 +1,23 @@
-import { Moon, Sun, Users } from 'lucide-react';
+import { Moon, Sun, Users, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/appStore';
 import { Button } from '@/components/ui/button';
 import SyncButton from '@/components/sync/SyncButton';
 import { api } from '@/lib/api';
 
+function fmtSyncTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
 export default function Header() {
   const { tab, setTab, toggleTheme, theme } = useAppStore();
   const [visitorCount, setVisitorCount] = useState<number | null>(null);
+
+  // Shares cache with SyncButton — no extra network request
+  const { data: syncStatus } = useQuery({ queryKey: ['sync-status'], queryFn: api.syncStatus, refetchInterval: (q) => q.state.data?.syncing ? 5_000 : 30_000 });
+  const lastSyncAt = syncStatus?.lastResult?.at ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +62,13 @@ export default function Header() {
           <div className="flex items-center gap-1 text-slate-400 text-xs">
             <Users size={12} />
             <span>Today <span className="text-slate-200 font-medium">{visitorCount.toLocaleString()}</span></span>
+          </div>
+        )}
+
+        {lastSyncAt && (
+          <div className="hidden sm:flex items-center gap-1 text-slate-400 text-xs">
+            <RefreshCw size={11} />
+            <span>Synced <span className="text-slate-300">{fmtSyncTime(lastSyncAt)}</span></span>
           </div>
         )}
 
