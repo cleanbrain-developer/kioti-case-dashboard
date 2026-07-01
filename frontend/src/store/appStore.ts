@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { CasesFilter } from '@/types';
 
-type Tab = 'insights' | 'cases' | 'aging';
+type Tab = 'insights' | 'cases' | 'aging' | 'reports';
 type Theme = 'light' | 'dark';
 
 interface AppState {
@@ -20,7 +20,7 @@ interface AppState {
   goToCasesWithFilter: (patch: Partial<CasesFilter>) => void;
 }
 
-const VALID_TABS = ['insights', 'cases', 'aging'] as const;
+const VALID_TABS = ['insights', 'cases', 'aging', 'reports'] as const;
 
 const DEFAULT_FILTER: CasesFilter = {
   search: '', status: '', priority: '', department: '',

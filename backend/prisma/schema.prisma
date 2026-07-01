@@ -44,3 +44,36 @@ model SyncLog {
 
   @@map("sync_log")
 }
+
+model EmailRecipient {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  name        String
+  createdAt   DateTime @default(now()) @map("created_at")
+  departments RecipientDepartment[]
+
+  @@map("email_recipients")
+}
+
+model RecipientDepartment {
+  recipientId Int    @map("recipient_id")
+  department  String
+  recipient   EmailRecipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@id([recipientId, department])
+  @@map("recipient_departments")
+}
+
+model EmailSchedule {
+  id           Int       @id @default(autoincrement())
+  enabled      Boolean   @default(false)
+  freq         String    @default("weekly")
+  dayOfWeek    Int?      @map("day_of_week")
+  dayOfMonth   Int?      @map("day_of_month")
+  hourEst      Int       @default(8)  @map("hour_est")
+  minuteEst    Int       @default(0)  @map("minute_est")
+  updatedAt    DateTime  @updatedAt   @map("updated_at")
+  lastSentAt   DateTime?              @map("last_sent_at")
+
+  @@map("email_schedules")
+}

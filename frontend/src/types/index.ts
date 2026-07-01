@@ -104,3 +104,25 @@ export interface CasesFilter {
   sortField    : string;
   sortDir      : 'ASC' | 'DESC';
 }
+
+// ── Reports / Email ──────────────────────────────────────────────────────────
+
+export interface EmailRecipient {
+  id         : number;
+  email      : string;
+  name       : string;
+  departments: string[];
+  createdAt  : string;
+}
+
+export interface EmailSchedule {
+  id          : number;
+  enabled     : boolean;
+  freq        : 'weekly' | 'monthly';
+  dayOfWeek   : number | null;
+  dayOfMonth  : number | null;
+  hourEst     : number;
+  minuteEst   : number;
+  lastSentAt  : string | null;
+  updatedAt?  : string;
+}

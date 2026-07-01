@@ -6,8 +6,9 @@ import Header from '@/components/layout/Header';
 import InsightsPage from '@/pages/InsightsPage';
 import CasesPage from '@/pages/CasesPage';
 import AgingPage from '@/pages/AgingPage';
+import ReportsPage from '@/pages/ReportsPage';
 
-const VALID_TABS = ['insights', 'cases', 'aging'] as const;
+const VALID_TABS = ['insights', 'cases', 'aging', 'reports'] as const;
 type Tab = typeof VALID_TABS[number];
 
 export default function App() {
@@ -47,7 +48,10 @@ export default function App() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-[104px]">
-        {tab === 'insights' ? <InsightsPage /> : tab === 'cases' ? <CasesPage /> : <AgingPage />}
+        {tab === 'insights' ? <InsightsPage />
+          : tab === 'cases'    ? <CasesPage />
+          : tab === 'aging'    ? <AgingPage />
+          : <ReportsPage />}
       </main>
     </div>
   );
