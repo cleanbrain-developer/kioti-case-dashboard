@@ -381,7 +381,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-[900px] mx-auto">
+    <div className="p-4 space-y-4 max-w-[900px] mx-auto">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
