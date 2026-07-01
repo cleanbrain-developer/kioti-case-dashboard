@@ -24,7 +24,7 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
 
   const f = (id: keyof typeof filter) => filter[id] as string;
 
-  const handleApply = () => { setFilter({ page: 1 }); onApply(); };
+  const applyNow = (patch: Parameters<typeof setFilter>[0] = {}) => { setFilter({ ...patch, page: 1 }); onApply(); };
   const handleClear = () => { resetFilter(); onApply(); };
 
   const activeBadges = [
@@ -64,13 +64,13 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
                 placeholder="Subject / Case #"
                 value={f('search')}
                 onChange={e => setFilter({ search: e.target.value })}
-                onKeyDown={e => e.key === 'Enter' && handleApply()}
+                onKeyDown={e => e.key === 'Enter' && applyNow()}
               />
             </div>
 
             <div className="space-y-1 min-w-0">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</label>
-              <select className={SELECT_CLS} value={f('status')} onChange={e => setFilter({ status: e.target.value })}>
+              <select className={SELECT_CLS} value={f('status')} onChange={e => applyNow({ status: e.target.value })}>
                 <option value="">All Statuses</option>
                 {statusOpts.map((s: string) => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -78,7 +78,7 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
 
             <div className="space-y-1 min-w-0">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Priority</label>
-              <select className={SELECT_CLS} value={f('priority')} onChange={e => setFilter({ priority: e.target.value })}>
+              <select className={SELECT_CLS} value={f('priority')} onChange={e => applyNow({ priority: e.target.value })}>
                 <option value="">All Priorities</option>
                 <option>High</option>
                 <option>Medium</option>
@@ -92,7 +92,7 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
                 <select
                   className={SELECT_CLS}
                   value={f('department')}
-                  onChange={e => setFilter({ department: e.target.value })}
+                  onChange={e => applyNow({ department: e.target.value })}
                   title={f('department') || 'All Departments'}
                 >
                   <option value="">All Departments</option>
@@ -107,7 +107,7 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
                 placeholder="Person name…"
                 value={f('personInCharge')}
                 onChange={e => setFilter({ personInCharge: e.target.value })}
-                onKeyDown={e => e.key === 'Enter' && handleApply()}
+                onKeyDown={e => e.key === 'Enter' && applyNow()}
               />
             </div>
 
@@ -115,7 +115,7 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Created From</label>
               <DatePicker
                 value={f('dateFrom')}
-                onChange={v => setFilter({ dateFrom: v })}
+                onChange={v => applyNow({ dateFrom: v })}
                 placeholder="From…"
               />
             </div>
@@ -124,7 +124,7 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Created To</label>
               <DatePicker
                 value={f('dateTo')}
-                onChange={v => setFilter({ dateTo: v })}
+                onChange={v => applyNow({ dateTo: v })}
                 placeholder="To…"
               />
             </div>
@@ -132,7 +132,6 @@ export default function CasesFilter({ onApply }: { onApply: () => void }) {
           </div>
 
           <div className="flex items-center gap-2 pt-1 flex-wrap">
-            <Button onClick={handleApply}>Apply Filters</Button>
             <Button variant="outline" onClick={handleClear}>Clear All</Button>
             {activeBadges.map(b => (
               <span
