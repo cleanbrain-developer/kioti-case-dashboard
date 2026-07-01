@@ -80,25 +80,18 @@ function AgingGroupChart({ data, title, theme, groupType, onNavigate }: ChartPro
   const option = {
     backgroundColor: 'transparent',
     tooltip: {
-      trigger        : 'axis',
-      axisPointer    : { type: 'shadow' },
+      trigger        : 'item',
       backgroundColor: isDark ? '#1e293b' : '#fff',
       borderColor    : isDark ? '#334155' : '#e2e8f0',
       textStyle      : { color: isDark ? '#f1f5f9' : '#0f172a', fontSize: 11 },
-      formatter: (params: any[]) => {
-        const idx = params[0].dataIndex;
-        const g   = sorted[idx];
-        const lines = [
-          `<strong>${g.key}</strong>`,
-          `Total: <strong>${g.total.toLocaleString()}</strong> · Avg: ${g.avgAge}d · Max: ${g.maxAge}d`,
-          '<span style="font-size:10px;color:#94a3b8">Click a segment to view cases</span>',
-          '',
-        ];
-        params.forEach(p => {
-          if (p.value > 0)
-            lines.push(`<span style="color:${p.color}">●</span> ${p.seriesName}: ${(p.value as number).toLocaleString()}`);
-        });
-        return lines.join('<br/>');
+      formatter: (p: any) => {
+        const g = sorted[p.dataIndex];
+        return [
+          `<strong style="font-size:12px">${g.key}</strong>`,
+          `<span style="color:${p.color}">●</span> ${p.seriesName} &nbsp;<strong>${(p.value as number).toLocaleString()}</strong>`,
+          `<span style="color:#94a3b8;font-size:10px">Total open &nbsp;<strong style="color:${isDark ? '#f1f5f9' : '#0f172a'}">${g.total.toLocaleString()}</strong></span>`,
+          `<span style="color:#94a3b8;font-size:10px">Click to view ${p.seriesName} cases</span>`,
+        ].join('<br/>');
       },
     },
     legend: {
