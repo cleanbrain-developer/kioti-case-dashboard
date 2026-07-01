@@ -5,7 +5,7 @@ services:
   # ── Postfix SMTP relay (내부 메일 발송용) ────────────────────
   smtp:
     image: boky/postfix
-    container_name: kioti-smtp
+    container_name: kioti-case-dashboard-smtp
     restart: unless-stopped
     environment:
       HOSTNAME: mail.kiotitractor.com
@@ -20,11 +20,11 @@ services:
   backend:
     build: ./backend
     image: kioti-backend:latest
-    container_name: kioti-backend
+    container_name: kioti-case-dashboard-backend
     env_file: .env
     environment:
       DATABASE_URL: postgresql://kioti:${DB_PASSWORD:-kioti1234}@db:5432/kioti_dashboard
-      SMTP_HOST: kioti-smtp
+      SMTP_HOST: smtp
       SMTP_PORT: "25"
       SMTP_SECURE: "false"
     depends_on:
@@ -40,7 +40,7 @@ services:
   frontend:
     build: ./frontend
     image: kioti-frontend:latest
-    container_name: kioti-frontend
+    container_name: kioti-case-dashboard-frontend
     ports:
       - "${PORT:-80}:80"
     depends_on:
@@ -52,7 +52,7 @@ services:
   # ── PostgreSQL 16 ────────────────────────────────────────────
   db:
     image: postgres:16-alpine
-    container_name: kioti-db
+    container_name: kioti-case-dashboard-db
     environment:
       POSTGRES_USER: kioti
       POSTGRES_PASSWORD: ${DB_PASSWORD:-kioti1234}
