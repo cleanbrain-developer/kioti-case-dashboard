@@ -15,7 +15,7 @@ export default function CasesPage() {
   });
 
   return (
-    <div className="p-6 space-y-4 max-w-[1400px] mx-auto">
+    <div className="p-6 space-y-4">
       <CasesFilter onApply={() => refetch()} />
       <CasesTable data={data} isLoading={isLoading} onPageChange={() => refetch()} />
     </div>

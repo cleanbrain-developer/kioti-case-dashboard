@@ -48,7 +48,7 @@ export default function InsightsPage() {
     : 'Open Cases by Person In Charge';
 
   return (
-    <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+    <div className="p-6 space-y-6">
       <KpiCards kpi={data.kpi} />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

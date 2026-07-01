@@ -262,7 +262,7 @@ export default function AgingPage() {
   const snapshot = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+    <div className="p-6 space-y-6">
       <div>
         <h2 className="text-lg font-semibold">Case Aging Analysis</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
