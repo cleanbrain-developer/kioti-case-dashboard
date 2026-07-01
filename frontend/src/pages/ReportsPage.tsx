@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Mail, Plus, Trash2, Pencil, Send, Clock, Users, Calendar, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -111,8 +111,10 @@ function ScheduleCard({ schedule, onSave }: { schedule: EmailSchedule; onSave: (
   const [local, setLocal]   = useState<EmailSchedule>(schedule);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved]   = useState(false);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { setLocal(schedule); }, [schedule]);
+  useEffect(() => () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current); }, []);
 
   const patch = (p: Partial<EmailSchedule>) => setLocal(prev => ({ ...prev, ...p }));
 
@@ -121,7 +123,8 @@ function ScheduleCard({ schedule, onSave }: { schedule: EmailSchedule; onSave: (
     try {
       await onSave(local);
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
     }

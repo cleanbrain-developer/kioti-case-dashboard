@@ -10,6 +10,8 @@ export default function Header() {
   const [visitorCount, setVisitorCount] = useState<number | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     // Local date in YYYY-MM-DD so count resets at local midnight, not UTC midnight
     const localDate = new Date().toLocaleDateString('en-CA');
 
@@ -20,11 +22,17 @@ export default function Header() {
       catch { sessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
       sessionStorage.setItem('visitSessionId', sessionId);
       // New session: ping to register this visit
-      api.pingVisitor(localDate, sessionId).then(d => setVisitorCount(d.count)).catch(() => {});
+      api.pingVisitor(localDate, sessionId)
+        .then(d => { if (!cancelled) setVisitorCount(d.count); })
+        .catch(() => {});
     } else {
       // Existing session (e.g. page refresh): just read the current count, no extra ping
-      api.todayVisitors(localDate).then(d => setVisitorCount(d.count)).catch(() => {});
+      api.todayVisitors(localDate)
+        .then(d => { if (!cancelled) setVisitorCount(d.count); })
+        .catch(() => {});
     }
+
+    return () => { cancelled = true; };
   }, []);
 
   return (

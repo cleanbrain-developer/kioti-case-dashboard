@@ -33,21 +33,31 @@ export default function SyncModal({ open, onClose }: Props) {
   const [errorMsg, setErrorMsg] = useState('');
   const [elapsedSec, setElapsedSec] = useState(0);
 
-  const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const mountedRef = useRef(true);
 
   const stopPoll  = () => { if (pollRef.current)  { clearInterval(pollRef.current);  pollRef.current  = null; } };
   const stopTimer = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
 
+  // Stop all intervals on unmount to prevent state updates on unmounted component
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; stopPoll(); stopTimer(); };
+  }, []);
+
   const startTimer = () => {
     const t0 = Date.now();
     setElapsedSec(0);
-    timerRef.current = setInterval(() => setElapsedSec(Math.floor((Date.now() - t0) / 1000)), 1000);
+    timerRef.current = setInterval(() => {
+      if (mountedRef.current) setElapsedSec(Math.floor((Date.now() - t0) / 1000));
+    }, 1000);
   };
 
   const startPoll = () => {
     pollRef.current = setInterval(async () => {
       const s = await api.syncStatus();
+      if (!mountedRef.current) return;
       setStatus(s);
       if (!s.syncing) {
         stopPoll(); stopTimer();
@@ -60,6 +70,7 @@ export default function SyncModal({ open, onClose }: Props) {
   useEffect(() => {
     if (open) {
       api.syncStatus().then(s => {
+        if (!mountedRef.current) return;
         setStatus(s);
         if (s.syncing) {
           setUiState('loading');

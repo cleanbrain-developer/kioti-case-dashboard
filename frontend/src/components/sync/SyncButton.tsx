@@ -6,7 +6,8 @@ import SyncModal from './SyncModal';
 
 export default function SyncButton() {
   const [open, setOpen] = useState(false);
-  const { data } = useQuery({ queryKey: ['sync-status'], queryFn: api.syncStatus, refetchInterval: 5000 });
+  // Poll every 5s while syncing, 30s otherwise — SyncModal handles fine-grained progress tracking
+  const { data } = useQuery({ queryKey: ['sync-status'], queryFn: api.syncStatus, refetchInterval: (q) => q.state.data?.syncing ? 5_000 : 30_000 });
 
   const syncing = data?.syncing ?? false;
   const pct = syncing && data?.phase === 'saving' && (data?.total ?? 0) > 0
