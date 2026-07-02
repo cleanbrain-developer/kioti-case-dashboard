@@ -50,7 +50,7 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       {/* Confidential notice */}
-      <div className="h-6 bg-amber-950 flex items-center justify-center gap-1.5 px-4">
+      <div className="h-6 bg-[#1a0900] flex items-center justify-center gap-1.5 px-4">
         <AlertCircle size={11} className="text-amber-500 flex-shrink-0" />
         <span className="text-[11px] text-amber-300/80 tracking-wide">
           For internal employees only — this dashboard contains confidential information.
